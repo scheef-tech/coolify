@@ -2,10 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [4.0.0-fork.3] - 2026-04-16
+
+### 🐛 Bug Fixes
+
+- *(installer)* Support release env asset fallback
 
 ### 📚 Documentation
 
+- Update changelog
 - Update changelog
 
 ## [4.0.0-fork.2] - 2026-04-16
