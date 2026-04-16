@@ -24,8 +24,7 @@ permissions:
 
 env:
   GITHUB_REGISTRY: ghcr.io
-  DOCKER_REGISTRY: docker.io
-  IMAGE_NAME: "coollabsio/coolify"
+  IMAGE_NAME: "${{ github.repository_owner }}/coolify"
 
 jobs:
   build-push:
@@ -61,13 +60,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN  }}
 
-      - name: Login to ${{ env.DOCKER_REGISTRY }}
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Build and Push Image (${{ matrix.arch }})
         uses: docker/build-push-action@v6
         with:
@@ -76,7 +68,6 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: true
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sanitize.outputs.tag }}-${{ matrix.arch }}
             ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sanitize.outputs.tag }}-${{ matrix.arch }}
           cache-from: |
             type=gha,scope=build-${{ matrix.arch }}
@@ -107,26 +98,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN  }}
 
-      - name: Login to ${{ env.DOCKER_REGISTRY }}
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Create & publish manifest on ${{ env.GITHUB_REGISTRY }}
         run: |
          docker buildx imagetools create \
          ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sanitize.outputs.tag }}-amd64 \
          ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sanitize.outputs.tag }}-aarch64 \
          --tag ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sanitize.outputs.tag }}
-
-      - name: Create & publish manifest on ${{ env.DOCKER_REGISTRY }}
-        run: |
-          docker buildx imagetools create \
-          ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sanitize.outputs.tag }}-amd64 \
-          ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sanitize.outputs.tag }}-aarch64 \
-          --tag ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sanitize.outputs.tag }}
 
       - uses: sarisia/actions-status-discord@v1
         if: always()

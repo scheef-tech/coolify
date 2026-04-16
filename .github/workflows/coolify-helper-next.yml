@@ -13,8 +13,7 @@ permissions:
 
 env:
   GITHUB_REGISTRY: ghcr.io
-  DOCKER_REGISTRY: docker.io
-  IMAGE_NAME: "coollabsio/coolify-helper"
+  IMAGE_NAME: "${{ github.repository_owner }}/coolify-helper"
 
 jobs:
   build-push:
@@ -40,13 +39,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN  }}
 
-      - name: Login to ${{ env.DOCKER_REGISTRY }}
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Get Version
         id: version
         run: |
@@ -60,7 +52,6 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: true
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}-next-${{ matrix.arch }}
             ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}-next-${{ matrix.arch }}
           labels: |
             coolify.managed=true
@@ -82,13 +73,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN  }}
 
-      - name: Login to ${{ env.DOCKER_REGISTRY }}
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.DOCKER_REGISTRY }}
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Get Version
         id: version
         run: |
@@ -101,14 +85,6 @@ jobs:
           ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}-next-aarch64 \
           --tag ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}-next \
           --tag ${{ env.GITHUB_REGISTRY }}/${{ env.IMAGE_NAME }}:next
-
-      - name: Create & publish manifest on ${{ env.DOCKER_REGISTRY }}
-        run: |
-          docker buildx imagetools create \
-          ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}-next-amd64 \
-          ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}-next-aarch64 \
-          --tag ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}-next \
-          --tag ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:next
 
       - uses: sarisia/actions-status-discord@v1
         if: always()
