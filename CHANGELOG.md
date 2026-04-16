@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### 📚 Documentation
+
+- Update changelog
+
+## [4.0.0-fork.2] - 2026-04-16
+
+### 🚜 Refactor
+
+- *(workflows)* Update image name format and remove Docker registry references
+
 ## [4.0.0-fork.1] - 2026-04-16
 
 ### 🚀 Features
