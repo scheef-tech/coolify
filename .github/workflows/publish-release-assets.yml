@@ -41,6 +41,7 @@ jobs:
       - name: Prepare release artifacts
         env:
           ASSET_BASE_URL: ${{ steps.meta.outputs.asset_base_url }}
+          REGISTRY_NAMESPACE: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
 
@@ -49,12 +50,14 @@ jobs:
           {
             echo '#!/bin/bash'
             echo "export COOLIFY_ASSET_BASE_URL=\"${ASSET_BASE_URL}\""
+            echo "export REGISTRY_NAMESPACE=\"${REGISTRY_NAMESPACE}\""
             tail -n +2 scripts/install.sh
           } > dist/release-assets/install.sh
 
           {
             echo '#!/bin/bash'
             echo "export COOLIFY_ASSET_BASE_URL=\"${ASSET_BASE_URL}\""
+            echo "export REGISTRY_NAMESPACE=\"${REGISTRY_NAMESPACE}\""
             tail -n +2 scripts/upgrade.sh
           } > dist/release-assets/upgrade.sh
 

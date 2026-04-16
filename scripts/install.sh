@@ -10,6 +10,7 @@
 ## DOCKER_POOL_FORCE_OVERRIDE - Force override Docker address pool configuration (default: false)
 ## AUTOUPDATE - Set to "false" to disable auto-updates
 ## REGISTRY_URL - Custom registry URL for Docker images (default: ghcr.io)
+## REGISTRY_NAMESPACE - Registry namespace/organization for Docker images (default: coollabsio)
 ## COOLIFY_ASSET_BASE_URL - Custom installer asset URL (default: https://cdn.coollabs.io/coolify)
 
 set -e # Exit immediately if a command exits with a non-zero status
@@ -43,6 +44,7 @@ echo "Source code: https://github.com/coollabsio/coolify/blob/v4.x/scripts/insta
 ROOT_USERNAME=${ROOT_USERNAME:-}
 ROOT_USER_EMAIL=${ROOT_USER_EMAIL:-}
 ROOT_USER_PASSWORD=${ROOT_USER_PASSWORD:-}
+REGISTRY_NAMESPACE_DEFAULT="coollabsio"
 
 if [ -z "${COOLIFY_ASSET_BASE_URL:-}" ] && [ -f "$ENV_FILE" ] && grep -q "^COOLIFY_ASSET_BASE_URL=" "$ENV_FILE"; then
     COOLIFY_ASSET_BASE_URL=$(grep "^COOLIFY_ASSET_BASE_URL=" "$ENV_FILE" | cut -d '=' -f2-)
@@ -61,6 +63,18 @@ else
     else
         REGISTRY_URL="ghcr.io"
         echo "Using default registry URL: $REGISTRY_URL"
+    fi
+fi
+
+if [ -n "${REGISTRY_NAMESPACE+x}" ]; then
+    echo "Using registry namespace from environment variable: $REGISTRY_NAMESPACE"
+else
+    if [ -f "$ENV_FILE" ] && grep -q "^REGISTRY_NAMESPACE=" "$ENV_FILE"; then
+        REGISTRY_NAMESPACE=$(grep "^REGISTRY_NAMESPACE=" "$ENV_FILE" | cut -d '=' -f2)
+        echo "Using registry namespace from .env: $REGISTRY_NAMESPACE"
+    else
+        REGISTRY_NAMESPACE="$REGISTRY_NAMESPACE_DEFAULT"
+        echo "Using default registry namespace: $REGISTRY_NAMESPACE"
     fi
 fi
 
@@ -369,6 +383,7 @@ echo "| Helper            | $LATEST_HELPER_VERSION"
 echo "| Realtime          | $LATEST_REALTIME_VERSION"
 echo "| Docker Pool       | $DOCKER_ADDRESS_POOL_BASE (size $DOCKER_ADDRESS_POOL_SIZE)"
 echo "| Registry URL      | $REGISTRY_URL"
+echo "| Registry Namespace| $REGISTRY_NAMESPACE"
 echo "| Asset source      | $CDN"
 echo "---------------------------------------------"
 echo ""
@@ -862,6 +877,7 @@ if [ -n "${REGISTRY_URL+x}" ]; then
     # Only update if REGISTRY_URL was explicitly provided
     update_env_var "REGISTRY_URL" "$REGISTRY_URL"
 fi
+update_env_var "REGISTRY_NAMESPACE" "$REGISTRY_NAMESPACE"
 
 if [ -n "${COOLIFY_ASSET_BASE_URL:-}" ]; then
     update_env_var "COOLIFY_ASSET_BASE_URL" "$COOLIFY_ASSET_BASE_URL"
