@@ -1,0 +1,80 @@
+name: Publish Release Assets
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish assets to
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish-assets:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Resolve release metadata
+        id: meta
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          set -euo pipefail
+
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+          if [ -z "$TAG" ]; then
+            echo "Release tag is required."
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "asset_base_url=https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare release artifacts
+        env:
+          ASSET_BASE_URL: ${{ steps.meta.outputs.asset_base_url }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist/release-assets
+
+          {
+            echo '#!/bin/bash'
+            echo "export COOLIFY_ASSET_BASE_URL=\"${ASSET_BASE_URL}\""
+            tail -n +2 scripts/install.sh
+          } > dist/release-assets/install.sh
+
+          {
+            echo '#!/bin/bash'
+            echo "export COOLIFY_ASSET_BASE_URL=\"${ASSET_BASE_URL}\""
+            tail -n +2 scripts/upgrade.sh
+          } > dist/release-assets/upgrade.sh
+
+          chmod +x dist/release-assets/install.sh dist/release-assets/upgrade.sh
+
+          cp docker-compose.yml dist/release-assets/docker-compose.yml
+          cp docker-compose.prod.yml dist/release-assets/docker-compose.prod.yml
+          cp .env.production dist/release-assets/.env.production
+          cp versions.json dist/release-assets/versions.json
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/release-assets/install.sh
+            dist/release-assets/upgrade.sh
+            dist/release-assets/docker-compose.yml
+            dist/release-assets/docker-compose.prod.yml
+            dist/release-assets/.env.production
+            dist/release-assets/versions.json

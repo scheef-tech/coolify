@@ -1,13 +1,19 @@
 #!/bin/bash
 ## Do not modify this file. You will lose the ability to autoupdate!
 
-CDN="https://cdn.coollabs.io/coolify"
 LATEST_IMAGE=${1:-latest}
 LATEST_HELPER_VERSION=${2:-latest}
 REGISTRY_URL=${3:-ghcr.io}
 SKIP_BACKUP=${4:-false}
 ENV_FILE="/data/coolify/source/.env"
 STATUS_FILE="/data/coolify/source/.upgrade-status"
+CDN_DEFAULT="https://cdn.coollabs.io/coolify"
+
+if [ -z "${COOLIFY_ASSET_BASE_URL:-}" ] && [ -f "$ENV_FILE" ] && grep -q "^COOLIFY_ASSET_BASE_URL=" "$ENV_FILE"; then
+    COOLIFY_ASSET_BASE_URL=$(grep "^COOLIFY_ASSET_BASE_URL=" "$ENV_FILE" | cut -d '=' -f2-)
+fi
+
+CDN=${COOLIFY_ASSET_BASE_URL:-$CDN_DEFAULT}
 
 DATE=$(date +%Y-%m-%d-%H-%M-%S)
 LOGFILE="/data/coolify/source/upgrade-${DATE}.log"
@@ -45,6 +51,7 @@ echo "Started: $(date '+%Y-%m-%d %H:%M:%S')" >>"$LOGFILE"
 echo "Target Version: ${LATEST_IMAGE}" >>"$LOGFILE"
 echo "Helper Version: ${LATEST_HELPER_VERSION}" >>"$LOGFILE"
 echo "Registry URL: ${REGISTRY_URL}" >>"$LOGFILE"
+echo "Asset Source: ${CDN}" >>"$LOGFILE"
 echo "============================================================" >>"$LOGFILE"
 
 log_section "Step 1/6: Downloading configuration files"

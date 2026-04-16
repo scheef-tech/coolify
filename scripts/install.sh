@@ -10,12 +10,13 @@
 ## DOCKER_POOL_FORCE_OVERRIDE - Force override Docker address pool configuration (default: false)
 ## AUTOUPDATE - Set to "false" to disable auto-updates
 ## REGISTRY_URL - Custom registry URL for Docker images (default: ghcr.io)
+## COOLIFY_ASSET_BASE_URL - Custom installer asset URL (default: https://cdn.coollabs.io/coolify)
 
 set -e # Exit immediately if a command exits with a non-zero status
 ## $1 could be empty, so we need to disable this check
 #set -u # Treat unset variables as an error and exit
 set -o pipefail # Cause a pipeline to return the status of the last command that exited with a non-zero status
-CDN="https://cdn.coollabs.io/coolify"
+CDN_DEFAULT="https://cdn.coollabs.io/coolify"
 DATE=$(date +"%Y%m%d-%H%M%S")
 
 OS_TYPE=$(grep -w "ID" /etc/os-release | cut -d "=" -f 2 | tr -d '"')
@@ -42,6 +43,14 @@ echo "Source code: https://github.com/coollabsio/coolify/blob/v4.x/scripts/insta
 ROOT_USERNAME=${ROOT_USERNAME:-}
 ROOT_USER_EMAIL=${ROOT_USER_EMAIL:-}
 ROOT_USER_PASSWORD=${ROOT_USER_PASSWORD:-}
+
+if [ -z "${COOLIFY_ASSET_BASE_URL:-}" ] && [ -f "$ENV_FILE" ] && grep -q "^COOLIFY_ASSET_BASE_URL=" "$ENV_FILE"; then
+    COOLIFY_ASSET_BASE_URL=$(grep "^COOLIFY_ASSET_BASE_URL=" "$ENV_FILE" | cut -d '=' -f2-)
+    echo "Using asset URL from .env: $COOLIFY_ASSET_BASE_URL"
+fi
+
+CDN=${COOLIFY_ASSET_BASE_URL:-$CDN_DEFAULT}
+echo "Using installer asset source: $CDN"
 
 if [ -n "${REGISTRY_URL+x}" ]; then
     echo "Using registry URL from environment variable: $REGISTRY_URL"
@@ -317,7 +326,14 @@ if [ "$OS_TYPE" = 'amzn' ]; then
 fi
 
 # Fetch versions.json once and parse all values from it
-VERSIONS_JSON=$(curl -L --silent $CDN/versions.json)
+VERSIONS_JSON=$(curl -fsSL -L "$CDN/versions.json" || true)
+
+if [ -z "$VERSIONS_JSON" ]; then
+    echo "Failed to fetch versions.json from $CDN/versions.json"
+    echo "Set COOLIFY_ASSET_BASE_URL to a valid source or provide a version argument."
+    exit 1
+fi
+
 LATEST_VERSION=$(echo "$VERSIONS_JSON" | grep -i version | xargs | awk '{print $2}' | tr -d ',')
 LATEST_HELPER_VERSION=$(echo "$VERSIONS_JSON" | grep -i version | xargs | awk '{print $6}' | tr -d ',')
 LATEST_REALTIME_VERSION=$(echo "$VERSIONS_JSON" | grep -i version | xargs | awk '{print $8}' | tr -d ',')
@@ -353,6 +369,7 @@ echo "| Helper            | $LATEST_HELPER_VERSION"
 echo "| Realtime          | $LATEST_REALTIME_VERSION"
 echo "| Docker Pool       | $DOCKER_ADDRESS_POOL_BASE (size $DOCKER_ADDRESS_POOL_SIZE)"
 echo "| Registry URL      | $REGISTRY_URL"
+echo "| Asset source      | $CDN"
 echo "---------------------------------------------"
 echo ""
 
@@ -839,6 +856,11 @@ fi
 if [ -n "${REGISTRY_URL+x}" ]; then
     # Only update if REGISTRY_URL was explicitly provided
     update_env_var "REGISTRY_URL" "$REGISTRY_URL"
+fi
+
+if [ -n "${COOLIFY_ASSET_BASE_URL:-}" ]; then
+    update_env_var "COOLIFY_ASSET_BASE_URL" "$COOLIFY_ASSET_BASE_URL"
+    update_env_var "VERSIONS_URL" "$COOLIFY_ASSET_BASE_URL/versions.json"
 fi
 
 if [ "$AUTOUPDATE" = "false" ]; then
