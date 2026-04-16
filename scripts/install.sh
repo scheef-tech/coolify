@@ -778,18 +778,23 @@ curl -fsSL -L $CDN/docker-compose.yml -o /data/coolify/source/docker-compose.yml
 PID1=$!
 curl -fsSL -L $CDN/docker-compose.prod.yml -o /data/coolify/source/docker-compose.prod.yml &
 PID2=$!
-curl -fsSL -L $CDN/.env.production -o /data/coolify/source/.env.production &
-PID3=$!
 curl -fsSL -L $CDN/upgrade.sh -o /data/coolify/source/upgrade.sh &
-PID4=$!
+PID3=$!
 
 # Wait for all downloads to complete and check for errors
 DOWNLOAD_FAILED=false
-for PID in $PID1 $PID2 $PID3 $PID4; do
+for PID in $PID1 $PID2 $PID3; do
     if ! wait $PID; then
         DOWNLOAD_FAILED=true
     fi
 done
+
+# Some release assets cannot keep leading-dot filenames, so support both names.
+if ! curl -fsSL -L "$CDN/.env.production" -o /data/coolify/source/.env.production; then
+    if ! curl -fsSL -L "$CDN/default.env.production" -o /data/coolify/source/.env.production; then
+        DOWNLOAD_FAILED=true
+    fi
+fi
 
 if [ "$DOWNLOAD_FAILED" = true ]; then
     echo " - ERROR: One or more downloads failed. Please check your network connection."

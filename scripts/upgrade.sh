@@ -62,7 +62,10 @@ curl -fsSL -L $CDN/docker-compose.yml -o /data/coolify/source/docker-compose.yml
 log "Downloading docker-compose.prod.yml from ${CDN}/docker-compose.prod.yml"
 curl -fsSL -L $CDN/docker-compose.prod.yml -o /data/coolify/source/docker-compose.prod.yml
 log "Downloading .env.production from ${CDN}/.env.production"
-curl -fsSL -L $CDN/.env.production -o /data/coolify/source/.env.production
+if ! curl -fsSL -L "$CDN/.env.production" -o /data/coolify/source/.env.production; then
+    log "Fallback: downloading default.env.production from ${CDN}/default.env.production"
+    curl -fsSL -L "$CDN/default.env.production" -o /data/coolify/source/.env.production
+fi
 log "Configuration files downloaded successfully"
 echo "     Done."
 

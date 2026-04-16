@@ -62,7 +62,7 @@ jobs:
 
           cp docker-compose.yml dist/release-assets/docker-compose.yml
           cp docker-compose.prod.yml dist/release-assets/docker-compose.prod.yml
-          cp .env.production dist/release-assets/.env.production
+          cp .env.production dist/release-assets/default.env.production
           cp versions.json dist/release-assets/versions.json
 
       - name: Upload release assets
@@ -76,5 +76,5 @@ jobs:
             dist/release-assets/upgrade.sh
             dist/release-assets/docker-compose.yml
             dist/release-assets/docker-compose.prod.yml
-            dist/release-assets/.env.production
+            dist/release-assets/default.env.production
             dist/release-assets/versions.json
