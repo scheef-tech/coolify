@@ -13,6 +13,20 @@ class StandalonePostgresql extends BaseModel
 {
     use ClearsGlobalSearchCache, HasFactory, HasMetrics, HasSafeStringAttribute, SoftDeletes;
 
+    public const SSL_CERTIFICATE_ALGORITHM_PRIME256V1 = 'prime256v1';
+
+    public const SSL_CERTIFICATE_ALGORITHM_RSA_2048 = 'rsa-2048';
+
+    public const SSL_CERTIFICATE_ALGORITHM_SECP521R1 = 'secp521r1';
+
+    public const SSL_CERTIFICATE_ALGORITHM_DEFAULT = self::SSL_CERTIFICATE_ALGORITHM_SECP521R1;
+
+    public const SSL_CERTIFICATE_ALGORITHMS = [
+        self::SSL_CERTIFICATE_ALGORITHM_PRIME256V1,
+        self::SSL_CERTIFICATE_ALGORITHM_RSA_2048,
+        self::SSL_CERTIFICATE_ALGORITHM_SECP521R1,
+    ];
+
     protected $fillable = [
         'uuid',
         'name',
@@ -44,6 +58,7 @@ class StandalonePostgresql extends BaseModel
         'public_port_timeout',
         'enable_ssl',
         'ssl_mode',
+        'ssl_algorithm',
         'is_log_drain_enabled',
         'is_include_timestamps',
         'custom_docker_run_options',
@@ -290,6 +305,15 @@ class StandalonePostgresql extends BaseModel
     public function type(): string
     {
         return 'standalone-postgresql';
+    }
+
+    public function resolvedSslAlgorithm(): string
+    {
+        if (in_array($this->ssl_algorithm, self::SSL_CERTIFICATE_ALGORITHMS, true)) {
+            return $this->ssl_algorithm;
+        }
+
+        return self::SSL_CERTIFICATE_ALGORITHM_DEFAULT;
     }
 
     protected function internalDbUrl(): Attribute

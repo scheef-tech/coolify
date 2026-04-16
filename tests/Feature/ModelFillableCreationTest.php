@@ -540,6 +540,7 @@ it('creates StandalonePostgresql with all fillable attributes', function () {
         'public_port_timeout' => 7200,
         'enable_ssl' => true,
         'ssl_mode' => 'verify-full',
+        'ssl_algorithm' => 'prime256v1',
         'is_log_drain_enabled' => true,
         'is_include_timestamps' => true,
         'custom_docker_run_options' => '--shm-size=256m',
@@ -555,6 +556,7 @@ it('creates StandalonePostgresql with all fillable attributes', function () {
     expect($db->is_public)->toBeTrue();
     expect($db->public_port)->toBe(25432);
     expect($db->enable_ssl)->toBeTrue();
+    expect($db->ssl_algorithm)->toBe('prime256v1');
     expect($db->environment_id)->toBe($this->environment->id);
 });
 

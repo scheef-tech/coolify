@@ -27,16 +27,16 @@ class SslHelper
         ?string $configurationDir = null,
         ?string $mountPath = null,
         bool $isPemKeyFileRequired = false,
+        ?string $keyAlgorithm = null,
     ): SslCertificate {
         $organizationName = self::DEFAULT_ORGANIZATION_NAME;
         $countryName = self::DEFAULT_COUNTRY_NAME;
         $stateName = self::DEFAULT_STATE_NAME;
 
         try {
-            $privateKey = openssl_pkey_new([
-                'private_key_type' => OPENSSL_KEYTYPE_EC,
-                'curve_name' => 'secp521r1',
-            ]);
+            $algorithmConfig = self::resolveKeyAlgorithm($keyAlgorithm);
+
+            $privateKey = openssl_pkey_new($algorithmConfig['keyOptions']);
 
             if ($privateKey === false) {
                 throw new \RuntimeException('Failed to generate private key: '.openssl_error_string());
@@ -122,7 +122,7 @@ class SslHelper
                 'countryName' => $countryName,
                 'stateOrProvinceName' => $stateName,
             ], $privateKey, [
-                'digest_alg' => 'sha512',
+                'digest_alg' => $algorithmConfig['digestAlgorithm'],
                 'config' => $tempConfigPath,
                 'req_extensions' => 'req_ext',
             ]);
@@ -137,7 +137,7 @@ class SslHelper
                 $caKey ?? $privateKey,
                 $validityDays,
                 [
-                    'digest_alg' => 'sha512',
+                    'digest_alg' => $algorithmConfig['digestAlgorithm'],
                     'config' => $tempConfigPath,
                     'x509_extensions' => 'v3_req',
                 ],
@@ -229,5 +229,42 @@ class SslHelper
         } finally {
             fclose($tempConfig);
         }
+    }
+
+    /**
+     * @return array{
+     *     keyOptions: array{
+     *         private_key_type: int,
+     *         curve_name?: string,
+     *         private_key_bits?: int
+     *     },
+     *     digestAlgorithm: string
+     * }
+     */
+    private static function resolveKeyAlgorithm(?string $keyAlgorithm): array
+    {
+        return match ($keyAlgorithm) {
+            'prime256v1' => [
+                'keyOptions' => [
+                    'private_key_type' => OPENSSL_KEYTYPE_EC,
+                    'curve_name' => 'prime256v1',
+                ],
+                'digestAlgorithm' => 'sha256',
+            ],
+            'rsa-2048' => [
+                'keyOptions' => [
+                    'private_key_type' => OPENSSL_KEYTYPE_RSA,
+                    'private_key_bits' => 2048,
+                ],
+                'digestAlgorithm' => 'sha256',
+            ],
+            default => [
+                'keyOptions' => [
+                    'private_key_type' => OPENSSL_KEYTYPE_EC,
+                    'curve_name' => 'secp521r1',
+                ],
+                'digestAlgorithm' => 'sha512',
+            ],
+        };
     }
 }

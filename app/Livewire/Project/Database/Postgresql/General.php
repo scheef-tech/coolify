@@ -58,6 +58,12 @@ class General extends Component
 
     public ?string $sslMode = null;
 
+    public string $sslAlgorithm = StandalonePostgresql::SSL_CERTIFICATE_ALGORITHM_DEFAULT;
+
+    public ?string $initialSslAlgorithm = null;
+
+    public bool $showSslAlgorithmRegenerationNotice = false;
+
     public string $new_filename;
 
     public string $new_content;
@@ -102,6 +108,7 @@ class General extends Component
             'customDockerRunOptions' => 'nullable',
             'enableSsl' => 'boolean',
             'sslMode' => 'nullable|string|in:allow,prefer,require,verify-ca,verify-full',
+            'sslAlgorithm' => 'nullable|string|in:prime256v1,rsa-2048,secp521r1',
         ];
     }
 
@@ -122,6 +129,7 @@ class General extends Component
                 'publicPortTimeout.integer' => 'The Public Port Timeout must be an integer.',
                 'publicPortTimeout.min' => 'The Public Port Timeout must be at least 1.',
                 'sslMode.in' => 'The SSL Mode must be one of: allow, prefer, require, verify-ca, verify-full.',
+                'sslAlgorithm.in' => 'The SSL Certificate Algorithm must be one of: prime256v1, rsa-2048, secp521r1.',
             ]
         );
     }
@@ -144,6 +152,7 @@ class General extends Component
         'customDockerRunOptions' => 'Custom Docker Run Options',
         'enableSsl' => 'Enable SSL',
         'sslMode' => 'SSL Mode',
+        'sslAlgorithm' => 'SSL Certificate Algorithm',
     ];
 
     public function mount()
@@ -190,6 +199,7 @@ class General extends Component
             $this->database->custom_docker_run_options = $this->customDockerRunOptions;
             $this->database->enable_ssl = $this->enableSsl;
             $this->database->ssl_mode = $this->sslMode;
+            $this->database->ssl_algorithm = $this->sslAlgorithm;
             $this->database->save();
 
             $this->db_url = $this->database->internal_db_url;
@@ -213,6 +223,9 @@ class General extends Component
             $this->customDockerRunOptions = $this->database->custom_docker_run_options;
             $this->enableSsl = $this->database->enable_ssl;
             $this->sslMode = $this->database->ssl_mode;
+            $this->sslAlgorithm = $this->database->resolvedSslAlgorithm();
+            $this->initialSslAlgorithm = $this->sslAlgorithm;
+            $this->showSslAlgorithmRegenerationNotice = false;
             $this->db_url = $this->database->internal_db_url;
             $this->db_url_public = $this->database->external_db_url;
         }
@@ -242,6 +255,12 @@ class General extends Component
         $this->instantSaveSSL();
     }
 
+    public function updatedSslAlgorithm()
+    {
+        $this->instantSaveSSL();
+        $this->showSslAlgorithmRegenerationNotice = $this->shouldShowSslAlgorithmRegenerationNotice();
+    }
+
     public function instantSaveSSL()
     {
         try {
@@ -249,6 +268,9 @@ class General extends Component
 
             $this->syncData(true);
             $this->dispatch('success', 'SSL configuration updated.');
+            if (! $this->enableSsl) {
+                $this->showSslAlgorithmRegenerationNotice = false;
+            }
         } catch (Exception $e) {
             return handleError($e, $this);
         }
@@ -291,7 +313,13 @@ class General extends Component
                 configurationDir: $existingCert->configuration_dir,
                 mountPath: $existingCert->mount_path,
                 isPemKeyFileRequired: true,
+                keyAlgorithm: $this->database->resolvedSslAlgorithm(),
             );
+
+            $this->database->refresh();
+            $this->syncData();
+            $this->initialSslAlgorithm = $this->sslAlgorithm;
+            $this->showSslAlgorithmRegenerationNotice = false;
 
             $this->dispatch('success', 'SSL certificates have been regenerated. Please restart the database for changes to take effect.');
         } catch (Exception $e) {
@@ -495,5 +523,13 @@ class General extends Component
     {
         $this->database->refresh();
         $this->syncData();
+    }
+
+    private function shouldShowSslAlgorithmRegenerationNotice(): bool
+    {
+        return $this->enableSsl
+            && ! is_null($this->certificateValidUntil)
+            && ! is_null($this->initialSslAlgorithm)
+            && $this->sslAlgorithm !== $this->initialSslAlgorithm;
     }
 }

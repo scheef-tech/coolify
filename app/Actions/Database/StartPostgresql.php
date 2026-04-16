@@ -88,8 +88,19 @@ class StartPostgresql
                     caKey: $caCert->ssl_private_key,
                     configurationDir: $this->configuration_dir,
                     mountPath: '/var/lib/postgresql/certs',
+                    keyAlgorithm: $this->database->resolvedSslAlgorithm(),
                 );
             }
+
+            // Ensure files exist on disk before compose up. Docker may otherwise auto-create directories
+            // for missing bind-mount file paths (server.crt/server.key), causing PostgreSQL startup failure.
+            $certContentBase64 = base64_encode($this->ssl_certificate->ssl_certificate);
+            $keyContentBase64 = base64_encode($this->ssl_certificate->ssl_private_key);
+            $this->commands[] = "rm -rf $this->configuration_dir/ssl/server.crt $this->configuration_dir/ssl/server.key";
+            $this->commands[] = "echo '{$certContentBase64}' | base64 -d | tee $this->configuration_dir/ssl/server.crt > /dev/null";
+            $this->commands[] = "echo '{$keyContentBase64}' | base64 -d | tee $this->configuration_dir/ssl/server.key > /dev/null";
+            $this->commands[] = "chmod 644 $this->configuration_dir/ssl/server.crt";
+            $this->commands[] = "chmod 600 $this->configuration_dir/ssl/server.key";
         }
 
         $persistent_storages = $this->generate_local_persistent_volumes();
@@ -158,6 +169,17 @@ class StartPostgresql
             );
         }
 
+        if ($this->database->enable_ssl) {
+            $persistent_file_volumes = $persistent_file_volumes->reject(function ($storage) {
+                return in_array($storage->mount_path, [
+                    '/var/lib/postgresql/certs/server.crt',
+                    '/var/lib/postgresql/certs/server.key',
+                ]);
+            });
+
+            $docker_compose['services'][$container_name]['volumes'][] = "$this->configuration_dir/ssl:/var/lib/postgresql/certs";
+        }
+
         if (count($persistent_file_volumes) > 0) {
             $docker_compose['services'][$container_name]['volumes'] = array_merge(
                 $docker_compose['services'][$container_name]['volumes'],
@@ -223,12 +245,20 @@ class StartPostgresql
         $this->commands[] = "echo '{$readme}' > $this->configuration_dir/README.md";
         $this->commands[] = "echo 'Pulling {$database->image} image.'";
         $this->commands[] = "docker compose -f $this->configuration_dir/docker-compose.yml pull";
+        if ($this->database->enable_ssl) {
+            $this->commands[] = "POSTGRES_UID=$(docker run --rm --entrypoint sh {$database->image} -c 'id -u {$this->database->postgres_user} 2>/dev/null || id -u postgres 2>/dev/null || id -u')";
+            $this->commands[] = "POSTGRES_GID=$(docker run --rm --entrypoint sh {$database->image} -c 'id -g {$this->database->postgres_user} 2>/dev/null || id -g postgres 2>/dev/null || id -g')";
+            if (isDev()) {
+                $this->commands[] = "docker run --rm -v coolify_dev_coolify_data:/data alpine sh -c \"chown \${POSTGRES_UID}:\${POSTGRES_GID} /data/databases/{$container_name}/ssl/server.key /data/databases/{$container_name}/ssl/server.crt && chmod 600 /data/databases/{$container_name}/ssl/server.key && chmod 644 /data/databases/{$container_name}/ssl/server.crt\"";
+            } else {
+                $this->commands[] = "chown \${POSTGRES_UID}:\${POSTGRES_GID} $this->configuration_dir/ssl/server.key $this->configuration_dir/ssl/server.crt";
+                $this->commands[] = "chmod 600 $this->configuration_dir/ssl/server.key";
+                $this->commands[] = "chmod 644 $this->configuration_dir/ssl/server.crt";
+            }
+        }
         $this->commands[] = "docker stop -t 10 $container_name 2>/dev/null || true";
         $this->commands[] = "docker rm -f $container_name 2>/dev/null || true";
         $this->commands[] = "docker compose -f $this->configuration_dir/docker-compose.yml up -d";
-        if ($this->database->enable_ssl) {
-            $this->commands[] = executeInDocker($this->database->uuid, "chown {$this->database->postgres_user}:{$this->database->postgres_user} /var/lib/postgresql/certs/server.key /var/lib/postgresql/certs/server.crt");
-        }
         $this->commands[] = "echo 'Database started.'";
 
         return remote_process($this->commands, $database->destination->server, callEventOnFinish: 'DatabaseStatusChanged');

@@ -117,28 +117,74 @@
                 </div>
                 @if ($enableSsl)
                     <div class="mx-2">
+                        @php
+                            $isHyperdriveUnsupportedAlgorithm = $sslAlgorithm === 'secp521r1';
+                        @endphp
                         @if ($database->isExited())
-                            <x-forms.select id="sslMode" label="SSL Mode" wire:model.live="sslMode"
-                                instantSave="instantSaveSSL"
-                                helper="Choose the SSL verification mode for PostgreSQL connections" canGate="update"
-                                :canResource="$database">
-                                <option value="allow" title="Allow insecure connections">allow (insecure)</option>
-                                <option value="prefer" title="Prefer secure connections">prefer (secure)</option>
-                                <option value="require" title="Require secure connections">require (secure)</option>
-                                <option value="verify-ca" title="Verify CA certificate">verify-ca (secure)</option>
-                                <option value="verify-full" title="Verify full certificate">verify-full (secure)
-                                </option>
-                            </x-forms.select>
+                            <div class="max-w-2xl space-y-3">
+                                <x-forms.select id="sslMode" label="SSL Mode" wire:model.live="sslMode"
+                                    instantSave="instantSaveSSL"
+                                    helper="Choose the SSL verification mode for PostgreSQL connections" canGate="update"
+                                    :canResource="$database">
+                                    <option value="allow" title="Allow insecure connections">allow (insecure)</option>
+                                    <option value="prefer" title="Prefer secure connections">prefer (secure)</option>
+                                    <option value="require" title="Require secure connections">require (secure)</option>
+                                    <option value="verify-ca" title="Verify CA certificate">verify-ca (secure)</option>
+                                    <option value="verify-full" title="Verify full certificate">verify-full (secure)
+                                    </option>
+                                </x-forms.select>
+                                <x-forms.select id="sslAlgorithm" label="SSL Certificate Algorithm"
+                                    wire:model.live="sslAlgorithm" instantSave="instantSaveSSL"
+                                    helper="Used for generated PostgreSQL certificates. Regenerate SSL certificates after changing this value."
+                                    canGate="update" :canResource="$database">
+                                    <option value="prime256v1">ECDSA prime256v1</option>
+                                    <option value="rsa-2048">RSA 2048</option>
+                                    <option value="secp521r1">ECDSA secp521r1</option>
+                                </x-forms.select>
+                                @if ($isHyperdriveUnsupportedAlgorithm)
+                                    <div class="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs leading-5 text-warning">
+                                        This algorithm is not supported by Hyperdrive.
+                                    </div>
+                                @endif
+                                @if ($showSslAlgorithmRegenerationNotice)
+                                    <div class="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs leading-5 text-warning">
+                                        Changing SSL algorithm only updates configuration. To apply it, click
+                                        <span class="font-semibold">Regenerate SSL Certificates</span> and then restart the
+                                        database.
+                                    </div>
+                                @endif
+                            </div>
                         @else
-                            <x-forms.select id="sslMode" label="SSL Mode" instantSave="instantSaveSSL" disabled
-                                helper="Database should be stopped to change this settings.">
-                                <option value="allow" title="Allow insecure connections">allow (insecure)</option>
-                                <option value="prefer" title="Prefer secure connections">prefer (secure)</option>
-                                <option value="require" title="Require secure connections">require (secure)</option>
-                                <option value="verify-ca" title="Verify CA certificate">verify-ca (secure)</option>
-                                <option value="verify-full" title="Verify full certificate">verify-full (secure)
-                                </option>
-                            </x-forms.select>
+                            <div class="max-w-2xl space-y-3">
+                                <x-forms.select id="sslMode" label="SSL Mode" instantSave="instantSaveSSL" disabled
+                                    helper="Database should be stopped to change this settings.">
+                                    <option value="allow" title="Allow insecure connections">allow (insecure)</option>
+                                    <option value="prefer" title="Prefer secure connections">prefer (secure)</option>
+                                    <option value="require" title="Require secure connections">require (secure)</option>
+                                    <option value="verify-ca" title="Verify CA certificate">verify-ca (secure)</option>
+                                    <option value="verify-full" title="Verify full certificate">verify-full (secure)
+                                    </option>
+                                </x-forms.select>
+                                <x-forms.select id="sslAlgorithm" label="SSL Certificate Algorithm"
+                                    instantSave="instantSaveSSL" disabled
+                                    helper="Database should be stopped to change this settings.">
+                                    <option value="prime256v1">ECDSA prime256v1</option>
+                                    <option value="rsa-2048">RSA 2048</option>
+                                    <option value="secp521r1">ECDSA secp521r1</option>
+                                </x-forms.select>
+                                @if ($isHyperdriveUnsupportedAlgorithm)
+                                    <div class="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs leading-5 text-warning">
+                                        This algorithm is not supported by Hyperdrive.
+                                    </div>
+                                @endif
+                                @if ($showSslAlgorithmRegenerationNotice)
+                                    <div class="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs leading-5 text-warning">
+                                        Changing SSL algorithm only updates configuration. To apply it, click
+                                        <span class="font-semibold">Regenerate SSL Certificates</span> and then restart the
+                                        database.
+                                    </div>
+                                @endif
+                            </div>
                         @endif
                     </div>
                 @endif

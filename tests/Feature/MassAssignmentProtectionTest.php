@@ -218,6 +218,10 @@ describe('mass assignment protection', function () {
             expect($model->isFillable('ssl_mode'))
                 ->toBeTrue("{$modelClass} should allow mass assignment of 'ssl_mode'");
         }
+
+        $postgresModel = new StandalonePostgresql;
+        expect($postgresModel->isFillable('ssl_algorithm'))
+            ->toBeTrue(StandalonePostgresql::class." should allow mass assignment of 'ssl_algorithm'");
     });
 
     test('Application fill ignores non-fillable fields', function () {
