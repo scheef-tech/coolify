@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0-fork.5] - 2026-04-17
+
+### 🚀 Features
+
+- *(installer)* Follow latest fork release for autoupdates
+
+### 📚 Documentation
+
+- Update changelog
+
 ## [4.0.0-fork.4] - 2026-04-16
 
 ### 🐛 Bug Fixes
