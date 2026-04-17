@@ -135,10 +135,25 @@ update_env_var() {
     fi
 }
 
+force_update_env_var() {
+    local key="$1"
+    local value="$2"
+
+    if grep -q "^${key}=" "$ENV_FILE"; then
+        sed -i "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
+        log "Updated ${key}"
+    else
+        printf '%s=%s\n' "$key" "$value" >>"$ENV_FILE"
+        log "Added ${key} (was missing)"
+    fi
+}
+
 log "Checking environment variables..."
 update_env_var "PUSHER_APP_ID" "$(openssl rand -hex 32)"
 update_env_var "PUSHER_APP_KEY" "$(openssl rand -hex 32)"
 update_env_var "PUSHER_APP_SECRET" "$(openssl rand -hex 32)"
+force_update_env_var "REGISTRY_URL" "${REGISTRY_URL:-ghcr.io}"
+force_update_env_var "REGISTRY_NAMESPACE" "${REGISTRY_NAMESPACE:-coollabsio}"
 log "Environment variables check complete"
 echo "     Done."
 
@@ -266,11 +281,19 @@ nohup bash -c "
     if [ -f /data/coolify/source/docker-compose.custom.yml ]; then
         log 'Using custom docker-compose.yml'
         log 'Running docker compose up with custom configuration...'
-        docker run -v /data/coolify/source:/data/coolify/source -v /var/run/docker.sock:/var/run/docker.sock \${DOCKER_CONFIG_MOUNT} --rm \${REGISTRY_URL:-ghcr.io}/\${REGISTRY_NAMESPACE:-coollabsio}/coolify-helper:\${LATEST_HELPER_VERSION} bash -c \"LATEST_IMAGE=\${LATEST_IMAGE} docker compose --env-file /data/coolify/source/.env -f /data/coolify/source/docker-compose.yml -f /data/coolify/source/docker-compose.prod.yml -f /data/coolify/source/docker-compose.custom.yml up -d --remove-orphans --wait --wait-timeout 60\" >>\"\$LOGFILE\" 2>&1
+        docker run -v /data/coolify/source:/data/coolify/source -v /var/run/docker.sock:/var/run/docker.sock \${DOCKER_CONFIG_MOUNT} --rm \${REGISTRY_URL:-ghcr.io}/\${REGISTRY_NAMESPACE:-coollabsio}/coolify-helper:\${LATEST_HELPER_VERSION} bash -c \"REGISTRY_URL=\${REGISTRY_URL} REGISTRY_NAMESPACE=\${REGISTRY_NAMESPACE} LATEST_IMAGE=\${LATEST_IMAGE} docker compose --env-file /data/coolify/source/.env -f /data/coolify/source/docker-compose.yml -f /data/coolify/source/docker-compose.prod.yml -f /data/coolify/source/docker-compose.custom.yml up -d --remove-orphans --wait --wait-timeout 60\" >>\"\$LOGFILE\" 2>&1
+        COMPOSE_EXIT=\$?
     else
         log 'Using standard docker-compose configuration'
         log 'Running docker compose up...'
-        docker run -v /data/coolify/source:/data/coolify/source -v /var/run/docker.sock:/var/run/docker.sock \${DOCKER_CONFIG_MOUNT} --rm \${REGISTRY_URL:-ghcr.io}/\${REGISTRY_NAMESPACE:-coollabsio}/coolify-helper:\${LATEST_HELPER_VERSION} bash -c \"LATEST_IMAGE=\${LATEST_IMAGE} docker compose --env-file /data/coolify/source/.env -f /data/coolify/source/docker-compose.yml -f /data/coolify/source/docker-compose.prod.yml up -d --remove-orphans --wait --wait-timeout 60\" >>\"\$LOGFILE\" 2>&1
+        docker run -v /data/coolify/source:/data/coolify/source -v /var/run/docker.sock:/var/run/docker.sock \${DOCKER_CONFIG_MOUNT} --rm \${REGISTRY_URL:-ghcr.io}/\${REGISTRY_NAMESPACE:-coollabsio}/coolify-helper:\${LATEST_HELPER_VERSION} bash -c \"REGISTRY_URL=\${REGISTRY_URL} REGISTRY_NAMESPACE=\${REGISTRY_NAMESPACE} LATEST_IMAGE=\${LATEST_IMAGE} docker compose --env-file /data/coolify/source/.env -f /data/coolify/source/docker-compose.yml -f /data/coolify/source/docker-compose.prod.yml up -d --remove-orphans --wait --wait-timeout 60\" >>\"\$LOGFILE\" 2>&1
+        COMPOSE_EXIT=\$?
+    fi
+
+    if [ \$COMPOSE_EXIT -ne 0 ]; then
+        log \"ERROR: Docker compose up failed with exit code \$COMPOSE_EXIT\"
+        write_status 'error' 'Failed to start containers'
+        exit \$COMPOSE_EXIT
     fi
     log 'Docker compose up completed'
 

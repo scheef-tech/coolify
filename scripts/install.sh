@@ -867,6 +867,19 @@ update_env_var() {
     fi
 }
 
+force_update_env_var() {
+    local key="$1"
+    local value="$2"
+
+    if grep -q "^${key}=" "$ENV_FILE"; then
+        sed -i "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
+        echo " - Updated ${key}"
+    else
+        printf '%s=%s\n' "$key" "$value" >>"$ENV_FILE"
+        echo " - Added ${key} and it's value as the variable was missing"
+    fi
+}
+
 update_env_var "APP_ID" "$(openssl rand -hex 16)"
 update_env_var "APP_KEY" "base64:$(openssl rand -base64 32)"
 # update_env_var "DB_USERNAME" "$(openssl rand -hex 16)" # Causes issues: database "random-user" does not exist
@@ -886,9 +899,9 @@ fi
 
 if [ -n "${REGISTRY_URL+x}" ]; then
     # Only update if REGISTRY_URL was explicitly provided
-    update_env_var "REGISTRY_URL" "$REGISTRY_URL"
+    force_update_env_var "REGISTRY_URL" "$REGISTRY_URL"
 fi
-update_env_var "REGISTRY_NAMESPACE" "$REGISTRY_NAMESPACE"
+force_update_env_var "REGISTRY_NAMESPACE" "$REGISTRY_NAMESPACE"
 
 if [ -n "${COOLIFY_ASSET_BASE_URL:-}" ]; then
     if [ -n "${COOLIFY_RELEASE_BASE_URL:-}" ]; then
@@ -962,9 +975,9 @@ echo -e " - Please wait."
 getAJoke
 
 if [[ $- == *x* ]]; then
-    bash -x /data/coolify/source/upgrade.sh "${LATEST_VERSION:-latest}" "${LATEST_HELPER_VERSION:-latest}" "${REGISTRY_URL:-ghcr.io}" "true"
+    REGISTRY_NAMESPACE="${REGISTRY_NAMESPACE}" bash -x /data/coolify/source/upgrade.sh "${LATEST_VERSION:-latest}" "${LATEST_HELPER_VERSION:-latest}" "${REGISTRY_URL:-ghcr.io}" "true"
 else
-    bash /data/coolify/source/upgrade.sh "${LATEST_VERSION:-latest}" "${LATEST_HELPER_VERSION:-latest}" "${REGISTRY_URL:-ghcr.io}" "true"
+    REGISTRY_NAMESPACE="${REGISTRY_NAMESPACE}" bash /data/coolify/source/upgrade.sh "${LATEST_VERSION:-latest}" "${LATEST_HELPER_VERSION:-latest}" "${REGISTRY_URL:-ghcr.io}" "true"
 fi
 echo " - Coolify installed successfully."
 echo " - Waiting for Coolify to be ready..."
