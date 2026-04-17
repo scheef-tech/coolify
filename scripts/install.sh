@@ -12,6 +12,7 @@
 ## REGISTRY_URL - Custom registry URL for Docker images (default: ghcr.io)
 ## REGISTRY_NAMESPACE - Registry namespace/organization for Docker images (default: coollabsio)
 ## COOLIFY_ASSET_BASE_URL - Custom installer asset URL (default: https://cdn.coollabs.io/coolify)
+## COOLIFY_RELEASE_BASE_URL - Optional release update URL (for autoupdates), e.g. https://github.com/<owner>/<repo>/releases/latest/download
 
 set -e # Exit immediately if a command exits with a non-zero status
 ## $1 could be empty, so we need to disable this check
@@ -53,6 +54,16 @@ fi
 
 CDN=${COOLIFY_ASSET_BASE_URL:-$CDN_DEFAULT}
 echo "Using installer asset source: $CDN"
+
+if [ -z "${COOLIFY_RELEASE_BASE_URL:-}" ]; then
+    case "$CDN" in
+    https://github.com/*/releases/download/*)
+        RELEASE_REPO_BASE="${CDN%/releases/download/*}"
+        COOLIFY_RELEASE_BASE_URL="${RELEASE_REPO_BASE}/releases/latest/download"
+        echo "Derived release update source: $COOLIFY_RELEASE_BASE_URL"
+        ;;
+    esac
+fi
 
 if [ -n "${REGISTRY_URL+x}" ]; then
     echo "Using registry URL from environment variable: $REGISTRY_URL"
@@ -880,8 +891,15 @@ fi
 update_env_var "REGISTRY_NAMESPACE" "$REGISTRY_NAMESPACE"
 
 if [ -n "${COOLIFY_ASSET_BASE_URL:-}" ]; then
-    update_env_var "COOLIFY_ASSET_BASE_URL" "$COOLIFY_ASSET_BASE_URL"
-    update_env_var "VERSIONS_URL" "$COOLIFY_ASSET_BASE_URL/versions.json"
+    if [ -n "${COOLIFY_RELEASE_BASE_URL:-}" ]; then
+        update_env_var "COOLIFY_ASSET_BASE_URL" "$COOLIFY_RELEASE_BASE_URL"
+        update_env_var "VERSIONS_URL" "$COOLIFY_RELEASE_BASE_URL/versions.json"
+        update_env_var "UPGRADE_SCRIPT_URL" "$COOLIFY_RELEASE_BASE_URL/upgrade.sh"
+    else
+        update_env_var "COOLIFY_ASSET_BASE_URL" "$COOLIFY_ASSET_BASE_URL"
+        update_env_var "VERSIONS_URL" "$COOLIFY_ASSET_BASE_URL/versions.json"
+        update_env_var "UPGRADE_SCRIPT_URL" "$COOLIFY_ASSET_BASE_URL/upgrade.sh"
+    fi
 fi
 
 if [ "$AUTOUPDATE" = "false" ]; then
