@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### 🐛 Bug Fixes
+
+- *(installer)* Enforce fork namespace during restart
+
+### 📚 Documentation
+
+- Update changelog
+
 ## [4.0.0-fork.7] - 2026-04-17
 
 ### 📚 Documentation
