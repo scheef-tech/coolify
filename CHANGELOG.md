@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.0.0-fork.7] - 2026-04-17
+
+### 📚 Documentation
+
+- Update changelog
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Sync fork app version to fork.7
+
 ## [4.0.0-fork.5] - 2026-04-17
 
 ### 🚀 Features
