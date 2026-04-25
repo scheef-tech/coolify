@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\GithubController;
 use App\Http\Controllers\Api\HetznerController;
 use App\Http\Controllers\Api\OtherController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\ProjectSecretsController;
 use App\Http\Controllers\Api\ResourcesController;
 use App\Http\Controllers\Api\ScheduledTasksController;
 use App\Http\Controllers\Api\SecurityController;
@@ -51,6 +52,12 @@ Route::group([
     Route::get('/projects', [ProjectController::class, 'projects'])->middleware(['api.ability:read']);
     Route::get('/projects/{uuid}', [ProjectController::class, 'project_by_uuid'])->middleware(['api.ability:read']);
     Route::get('/projects/{uuid}/environments', [ProjectController::class, 'get_environments'])->middleware(['api.ability:read']);
+    Route::get('/projects/{uuid}/secrets', [ProjectSecretsController::class, 'secrets'])->middleware(['api.ability:read']);
+    Route::get('/projects/{uuid}/secrets/values', [ProjectSecretsController::class, 'fetch_secret_values'])->middleware(['api.ability:read']);
+    Route::get('/projects/{uuid}/secrets/{key}/value', [ProjectSecretsController::class, 'fetch_secret_value'])->middleware(['api.ability:read']);
+    Route::patch('/projects/{uuid}/secrets/bulk', [ProjectSecretsController::class, 'bulk_upsert_secrets'])->middleware(['api.ability:write']);
+    Route::put('/projects/{uuid}/secrets/{key}', [ProjectSecretsController::class, 'upsert_secret'])->middleware(['api.ability:write']);
+    Route::delete('/projects/{uuid}/secrets/{key}', [ProjectSecretsController::class, 'delete_secret'])->middleware(['api.ability:write']);
     Route::get('/projects/{uuid}/{environment_name_or_uuid}', [ProjectController::class, 'environment_details'])->middleware(['api.ability:read']);
     Route::post('/projects/{uuid}/environments', [ProjectController::class, 'create_environment'])->middleware(['api.ability:write']);
     Route::delete('/projects/{uuid}/environments/{environment_name_or_uuid}', [ProjectController::class, 'delete_environment'])->middleware(['api.ability:write']);
@@ -218,7 +225,7 @@ Route::group([
         try {
             $decrypted = decrypt($naked_token);
             $decrypted_token = json_decode($decrypted, true);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['message' => 'Invalid token'], 401);
         }
         $server_uuid = data_get($decrypted_token, 'server_uuid');
