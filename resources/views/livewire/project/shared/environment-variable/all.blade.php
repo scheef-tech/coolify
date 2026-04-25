@@ -104,4 +104,6 @@
             @endcan
         </form>
     @endif
+
+    <livewire:shared.shared-variables-accordion :context="$resource" :wire:key="'sva-resource-'.$resource->id" />
 </div>
