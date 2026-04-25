@@ -92,9 +92,9 @@ class General extends Component
         return [
             'name' => ValidationPatterns::nameRules(),
             'description' => ValidationPatterns::descriptionRules(),
-            'postgresUser' => 'required',
+            'postgresUser' => ['required', 'string', 'regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/'],
             'postgresPassword' => 'required',
-            'postgresDb' => 'required',
+            'postgresDb' => ['required', 'string', 'regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/'],
             'postgresInitdbArgs' => 'nullable',
             'postgresHostAuthMethod' => 'nullable',
             'postgresConf' => 'nullable',
@@ -120,8 +120,10 @@ class General extends Component
             [
                 'name.required' => 'The Name field is required.',
                 'postgresUser.required' => 'The Postgres User field is required.',
+                'postgresUser.regex' => 'The Postgres User may only contain letters, digits, and underscores, and must not start with a digit.',
                 'postgresPassword.required' => 'The Postgres Password field is required.',
                 'postgresDb.required' => 'The Postgres Database field is required.',
+                'postgresDb.regex' => 'The Postgres Database may only contain letters, digits, and underscores, and must not start with a digit.',
                 'image.required' => 'The Docker Image field is required.',
                 'publicPort.integer' => 'The Public Port must be an integer.',
                 'publicPort.min' => 'The Public Port must be at least 1.',

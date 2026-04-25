@@ -379,9 +379,9 @@ class DatabasesController extends Controller
             case 'standalone-postgresql':
                 $allowedFields = ['name', 'description', 'image', 'public_port', 'public_port_timeout', 'is_public', 'instant_deploy', 'limits_memory', 'limits_memory_swap', 'limits_memory_swappiness', 'limits_memory_reservation', 'limits_cpus', 'limits_cpuset', 'limits_cpu_shares', 'postgres_user', 'postgres_password', 'postgres_db', 'postgres_initdb_args', 'postgres_host_auth_method', 'postgres_conf'];
                 $validator = customApiValidator($request->all(), [
-                    'postgres_user' => 'string',
+                    'postgres_user' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                     'postgres_password' => 'string',
-                    'postgres_db' => 'string',
+                    'postgres_db' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                     'postgres_initdb_args' => 'string',
                     'postgres_host_auth_method' => 'string',
                     'postgres_conf' => 'string',
@@ -1724,9 +1724,9 @@ class DatabasesController extends Controller
         if ($type === NewDatabaseTypes::POSTGRESQL) {
             $allowedFields = ['name', 'description', 'image', 'public_port', 'public_port_timeout', 'is_public', 'project_uuid', 'environment_name', 'environment_uuid', 'server_uuid', 'destination_uuid', 'instant_deploy', 'limits_memory', 'limits_memory_swap', 'limits_memory_swappiness', 'limits_memory_reservation', 'limits_cpus', 'limits_cpuset', 'limits_cpu_shares', 'postgres_user', 'postgres_password', 'postgres_db', 'postgres_initdb_args', 'postgres_host_auth_method', 'postgres_conf'];
             $validator = customApiValidator($request->all(), [
-                'postgres_user' => 'string',
+                'postgres_user' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                 'postgres_password' => 'string',
-                'postgres_db' => 'string',
+                'postgres_db' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                 'postgres_initdb_args' => 'string',
                 'postgres_host_auth_method' => 'string',
                 'postgres_conf' => 'string',
