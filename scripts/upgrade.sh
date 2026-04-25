@@ -154,6 +154,42 @@ update_env_var "PUSHER_APP_KEY" "$(openssl rand -hex 32)"
 update_env_var "PUSHER_APP_SECRET" "$(openssl rand -hex 32)"
 force_update_env_var "REGISTRY_URL" "${REGISTRY_URL:-ghcr.io}"
 force_update_env_var "REGISTRY_NAMESPACE" "${REGISTRY_NAMESPACE:-coollabsio}"
+
+# Self-heal pinned autoupdate URLs (fork.10+)
+#
+# Pre-fork.7 fork installs wrote VERSIONS_URL / COOLIFY_ASSET_BASE_URL pointed at a
+# specific tag's release assets (e.g. .../releases/download/v4.0.0-fork.2/...). GitHub
+# release assets are immutable, so those URLs forever report fork.2's view of latest.
+# Operators who installed from fork.2-fork.6 era will be stuck on whatever fork.2's
+# versions.json said was current.
+#
+# This block detects URLs matching the pinned shape and rewrites them to use the
+# moving alias .../releases/latest/download/... so future autoupdates work without
+# manual intervention. Idempotent — already-healed URLs are left alone, and non-fork
+# URLs (e.g. cdn.coollabs.io) don't match the pattern.
+self_heal_pinned_url() {
+    local key="$1"
+    local current
+    current=$(grep "^${key}=" "$ENV_FILE" | head -n 1 | cut -d '=' -f2-)
+    if [ -z "$current" ]; then
+        return 0
+    fi
+    if [[ "$current" =~ ^(https://github\.com/[^/]+/[^/]+)/releases/download/v[^/]+(/.*)?$ ]]; then
+        local owner_repo="${BASH_REMATCH[1]}"
+        local rest="${BASH_REMATCH[2]}"
+        local healed="${owner_repo}/releases/latest/download${rest}"
+        # Strip any trailing slash so .../latest/download (no path) doesn't end in /
+        healed="${healed%/}"
+        force_update_env_var "$key" "$healed"
+        log "Self-healed pinned ${key} (was ${current}, now ${healed})"
+    fi
+}
+
+log "Checking for pinned autoupdate URLs to self-heal..."
+self_heal_pinned_url "VERSIONS_URL"
+self_heal_pinned_url "COOLIFY_ASSET_BASE_URL"
+self_heal_pinned_url "UPGRADE_SCRIPT_URL"
+
 log "Environment variables check complete"
 echo "     Done."
 
