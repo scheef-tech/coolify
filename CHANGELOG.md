@@ -2,28 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
-
 ## [4.0.0-fork.9] - 2026-04-25
 
-### ✨ Features
+### 🚀 Features
 
-- *(api)* Project-environment scoped secrets endpoints (CRUD + bulk + value-fetch)
-- *(env)* `is_dev_pullable` flag on Environment model gates secret value reads
-- *(ui)* Dedicated Project Secrets management page (replaces modal pretense)
-- *(security)* Allowlist Coolify update URLs (UPGRADE_SCRIPT_URL, VERSIONS_URL) — HTTPS only, host allowlist (cdn.coollabs.io + github.com release paths)
+- *(security)* Allowlist Coolify update URLs (UPGRADE_SCRIPT_URL, VERSIONS_URL)
+- *(env)* Add is_dev_pullable flag to Environment model
+- *(api)* Project-environment secrets endpoints (CRUD + bulk + value-fetch)
+- *(ui)* Dedicated Project Secrets management page
 
 ### 🐛 Bug Fixes
 
-- *(security)* Validate `postgres_user` and `postgres_db` against `^[a-zA-Z_][a-zA-Z0-9_]*$` — closes a shell-injection vector in StartPostgresql where a malicious value would break out of the `id -u` interpolation
+- *(security)* Validate postgres_user/db format to close shell injection
+
+### 🚜 Refactor
+
+- *(postgresql)* Dedup SSL algorithm list and add Hyperdrive helper
+
+### ⚙️ Miscellaneous Tasks
+
+- Rollup marker — entire secrets-and-audit-v1 branch (no file changes)
+- *(release)* Bump fork app version to 4.0.0-fork.9
+
+## [4.0.0-fork.8] - 2026-04-17
+
+### 🐛 Bug Fixes
+
 - *(installer)* Enforce fork namespace during restart
-
-### ♻️ Refactor
-
-- *(postgresql)* Dedup SSL algorithm list across Livewire validator, blade options, and helper match — single source of truth on the model. Adds `isSslAlgorithmHyperdriveCompatible()` to drop a hardcoded blade check.
 
 ### 📚 Documentation
 
+- Update changelog
 - Update changelog
 
 ## [4.0.0-fork.7] - 2026-04-17
