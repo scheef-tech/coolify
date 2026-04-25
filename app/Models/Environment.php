@@ -17,6 +17,7 @@ use OpenApi\Attributes as OA;
         'created_at' => ['type' => 'string'],
         'updated_at' => ['type' => 'string'],
         'description' => ['type' => 'string'],
+        'is_dev_pullable' => ['type' => 'boolean', 'description' => 'When true, secrets stored in this environment can be fetched by coolster pull/reveal. Default false.'],
     ]
 )]
 class Environment extends BaseModel
@@ -30,7 +31,15 @@ class Environment extends BaseModel
         'description',
         'project_id',
         'uuid',
+        'is_dev_pullable',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_dev_pullable' => 'boolean',
+        ];
+    }
 
     protected static function booted()
     {
