@@ -39,6 +39,8 @@ class Secrets extends Component
 
     public bool $isDevPullable = false;
 
+    public bool $compact = false;
+
     protected $listeners = [
         'environmentVariableDeleted' => 'refresh',
         'refreshEnvs' => 'refresh',
@@ -46,11 +48,14 @@ class Secrets extends Component
 
     public function mount(?string $project_uuid = null, ?string $environment_uuid = null): void
     {
-        $projectUuid = $project_uuid ?? request()->route('project_uuid');
-        $environmentUuid = $environment_uuid ?? request()->route('environment_uuid');
-
-        $this->project = Project::ownedByCurrentTeam()->where('uuid', $projectUuid)->firstOrFail();
-        $this->environment = $this->project->environments()->where('uuid', $environmentUuid)->firstOrFail();
+        if (! isset($this->project)) {
+            $projectUuid = $project_uuid ?? request()->route('project_uuid');
+            $this->project = Project::ownedByCurrentTeam()->where('uuid', $projectUuid)->firstOrFail();
+        }
+        if (! isset($this->environment)) {
+            $environmentUuid = $environment_uuid ?? request()->route('environment_uuid');
+            $this->environment = $this->project->environments()->where('uuid', $environmentUuid)->firstOrFail();
+        }
         $this->isDevPullable = (bool) $this->environment->is_dev_pullable;
 
         $this->refreshDevView();

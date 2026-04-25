@@ -17,6 +17,8 @@ class Index extends Component
 
     public ?string $variables = null;
 
+    public bool $compact = false;
+
     protected $listeners = ['refreshEnvs' => 'refreshEnvs', 'saveKey' => 'saveKey', 'environmentVariableDeleted' => 'refreshEnvs'];
 
     public function saveKey($data)
@@ -46,7 +48,9 @@ class Index extends Component
 
     public function mount()
     {
-        $this->team = currentTeam();
+        if (! isset($this->team)) {
+            $this->team = currentTeam();
+        }
         $this->getDevView();
     }
 

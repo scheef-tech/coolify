@@ -17,6 +17,8 @@ class Show extends Component
 
     public ?string $variables = null;
 
+    public bool $compact = false;
+
     protected $listeners = ['refreshEnvs' => 'refreshEnvs', 'saveKey' => 'saveKey', 'environmentVariableDeleted' => 'refreshEnvs'];
 
     public function saveKey($data)
@@ -46,13 +48,15 @@ class Show extends Component
 
     public function mount(?string $project_uuid = null)
     {
-        $projectUuid = $project_uuid ?? request()->route('project_uuid');
-        $teamId = currentTeam()->id;
-        $project = Project::where('team_id', $teamId)->where('uuid', $projectUuid)->first();
-        if (! $project) {
-            return redirect()->route('dashboard');
+        if (! isset($this->project)) {
+            $projectUuid = $project_uuid ?? request()->route('project_uuid');
+            $teamId = currentTeam()->id;
+            $project = Project::where('team_id', $teamId)->where('uuid', $projectUuid)->first();
+            if (! $project) {
+                return redirect()->route('dashboard');
+            }
+            $this->project = $project;
         }
-        $this->project = $project;
         $this->getDevView();
     }
 

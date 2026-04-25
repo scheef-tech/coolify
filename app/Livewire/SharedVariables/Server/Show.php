@@ -17,6 +17,8 @@ class Show extends Component
 
     public ?string $variables = null;
 
+    public bool $compact = false;
+
     protected $listeners = ['refreshEnvs' => 'refreshEnvs', 'saveKey' => 'saveKey', 'environmentVariableDeleted' => 'refreshEnvs'];
 
     public function saveKey($data)
@@ -50,14 +52,16 @@ class Show extends Component
 
     public function mount(?string $server_uuid = null)
     {
-        $serverUuid = $server_uuid ?? request()->route('server_uuid');
-        $teamId = currentTeam()->id;
-        $server = Server::where('team_id', $teamId)->where('uuid', $serverUuid)->first();
-        if (! $server) {
-            return redirect()->route('dashboard');
+        if (! isset($this->server)) {
+            $serverUuid = $server_uuid ?? request()->route('server_uuid');
+            $teamId = currentTeam()->id;
+            $server = Server::where('team_id', $teamId)->where('uuid', $serverUuid)->first();
+            if (! $server) {
+                return redirect()->route('dashboard');
+            }
+            $this->server = $server;
         }
-        $this->authorize('view', $server);
-        $this->server = $server;
+        $this->authorize('view', $this->server);
         $this->getDevView();
     }
 

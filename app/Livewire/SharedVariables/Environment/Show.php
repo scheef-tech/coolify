@@ -18,11 +18,13 @@ class Show extends Component
 
     public $environment;
 
-    public array $parameters;
+    public array $parameters = [];
 
     public string $view = 'normal';
 
     public ?string $variables = null;
+
+    public bool $compact = false;
 
     protected $listeners = ['refreshEnvs' => 'refreshEnvs', 'saveKey', 'environmentVariableDeleted' => 'refreshEnvs'];
 
@@ -54,11 +56,17 @@ class Show extends Component
     public function mount(?string $project_uuid = null, ?string $environment_uuid = null)
     {
         $this->parameters = get_route_parameters();
-        $projectUuid = $project_uuid ?? request()->route('project_uuid');
-        $environmentUuid = $environment_uuid ?? request()->route('environment_uuid');
 
-        $this->project = Project::ownedByCurrentTeam()->where('uuid', $projectUuid)->firstOrFail();
-        $this->environment = $this->project->environments()->where('uuid', $environmentUuid)->firstOrFail();
+        // When embedded (compact mode), the parent passes project + environment via props.
+        // Otherwise resolve from route params.
+        if (! isset($this->project)) {
+            $projectUuid = $project_uuid ?? request()->route('project_uuid');
+            $this->project = Project::ownedByCurrentTeam()->where('uuid', $projectUuid)->firstOrFail();
+        }
+        if (! isset($this->environment)) {
+            $environmentUuid = $environment_uuid ?? request()->route('environment_uuid');
+            $this->environment = $this->project->environments()->where('uuid', $environmentUuid)->firstOrFail();
+        }
         $this->getDevView();
     }
 

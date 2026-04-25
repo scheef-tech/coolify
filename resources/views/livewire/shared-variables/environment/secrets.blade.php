@@ -1,34 +1,52 @@
 <div>
-    <x-slot:title>
-        Secrets | Coolify
-    </x-slot>
-    <div class="flex flex-wrap items-center gap-2">
-        <h1>Secrets for {{ $project->name }}/{{ $environment->name }}</h1>
-        @can('update', $environment)
-            <x-forms.button wire:click="toggleAddForm">
-                {{ $showingAddForm ? 'Cancel' : '+ Add Secret' }}
+    @unless ($compact)
+        <x-slot:title>
+            Secrets | Coolify
+        </x-slot>
+        <div class="flex flex-wrap items-center gap-2">
+            <h1>Secrets for {{ $project->name }}/{{ $environment->name }}</h1>
+            @can('update', $environment)
+                <x-forms.button wire:click="toggleAddForm">
+                    {{ $showingAddForm ? 'Cancel' : '+ Add Secret' }}
+                </x-forms.button>
+            @endcan
+            <x-forms.button canGate="view" :canResource="$environment" wire:click="switchView">
+                {{ $view === 'normal' ? 'Developer view' : 'Normal view' }}
             </x-forms.button>
-        @endcan
-        <x-forms.button canGate="view" :canResource="$environment" wire:click="switchView">
-            {{ $view === 'normal' ? 'Developer view' : 'Normal view' }}
-        </x-forms.button>
-    </div>
+        </div>
 
-    <nav class="flex gap-1 mt-3 mb-1 border-b dark:border-coolgray-200 border-neutral-200" aria-label="Shared variables sections">
-        <a class="px-3 py-2 -mb-px text-sm font-medium border-b-2 border-transparent text-neutral-500 dark:hover:text-warning hover:text-coollabs dark:hover:border-warning hover:border-coollabs transition-colors"
-            href="{{ route('shared-variables.environment.show', ['project_uuid' => $project->uuid, 'environment_uuid' => $environment->uuid]) }}"
-            {{ wireNavigate() }}>
-            Variables
-        </a>
-        <span class="px-3 py-2 -mb-px text-sm font-semibold border-b-2 dark:border-warning border-coollabs dark:text-warning text-coollabs">
-            Secrets
-        </span>
-    </nav>
+        <nav class="flex gap-1 mt-3 mb-1 border-b dark:border-coolgray-200 border-neutral-200" aria-label="Shared variables sections">
+            <a class="px-3 py-2 -mb-px text-sm font-medium border-b-2 border-transparent text-neutral-500 dark:hover:text-warning hover:text-coollabs dark:hover:border-warning hover:border-coollabs transition-colors"
+                href="{{ route('shared-variables.environment.show', ['project_uuid' => $project->uuid, 'environment_uuid' => $environment->uuid]) }}"
+                {{ wireNavigate() }}>
+                Variables
+            </a>
+            <span class="px-3 py-2 -mb-px text-sm font-semibold border-b-2 dark:border-warning border-coollabs dark:text-warning text-coollabs">
+                Secrets
+            </span>
+        </nav>
 
-    <div class="flex items-center gap-1 mt-1 subtitle">
-        Sensitive environment values, scoped to this project + environment. Values are write-only — they are never
-        returned by the API or shown again after creation, unless this environment is marked dev-pullable below.
-    </div>
+        <div class="flex items-center gap-1 mt-1 subtitle">
+            Sensitive environment values, scoped to this project + environment. Values are write-only — they are never
+            returned by the API or shown again after creation, unless this environment is marked dev-pullable below.
+        </div>
+    @else
+        <div class="flex items-center gap-2 mb-2">
+            @can('update', $environment)
+                <x-forms.button wire:click="toggleAddForm">
+                    {{ $showingAddForm ? 'Cancel' : '+ Add Secret' }}
+                </x-forms.button>
+            @endcan
+            <x-forms.button canGate="view" :canResource="$environment" wire:click="switchView">
+                {{ $view === 'normal' ? 'Developer view' : 'Normal view' }}
+            </x-forms.button>
+            <a class="text-xs underline dark:text-warning text-coollabs ml-auto"
+                href="{{ route('shared-variables.environment.secrets', ['project_uuid' => $project->uuid, 'environment_uuid' => $environment->uuid]) }}"
+                {{ wireNavigate() }}>
+                Open full page
+            </a>
+        </div>
+    @endunless
 
     <div class="p-3 mt-3 border rounded-md dark:border-coolgray-200 border-neutral-200">
         <x-forms.checkbox canGate="update" :canResource="$environment" id="isDevPullable"
