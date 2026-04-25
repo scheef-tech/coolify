@@ -2,9 +2,13 @@
 
 namespace App\Livewire\Project\Shared\EnvironmentVariable;
 
+use App\Models\Application;
 use App\Models\Environment;
 use App\Models\Project;
+use App\Models\Server;
+use App\Models\Service;
 use App\Traits\EnvironmentVariableAnalyzer;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -85,7 +89,7 @@ class Add extends Component
             $result['team'] = $team->environment_variables()
                 ->pluck('key')
                 ->toArray();
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             // User not authorized to view team variables
         }
 
@@ -116,12 +120,12 @@ class Add extends Component
                                 $result['environment'] = $environment->environment_variables()
                                     ->pluck('key')
                                     ->toArray();
-                            } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+                            } catch (AuthorizationException $e) {
                                 // User not authorized to view environment variables
                             }
                         }
                     }
-                } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+                } catch (AuthorizationException $e) {
                     // User not authorized to view project variables
                 }
             }
@@ -131,7 +135,7 @@ class Add extends Component
         $serverUuid = data_get($this->parameters, 'server_uuid');
         if ($serverUuid) {
             // If we have a specific server_uuid, show variables for that server
-            $server = \App\Models\Server::where('team_id', $team->id)
+            $server = Server::where('team_id', $team->id)
                 ->where('uuid', $serverUuid)
                 ->first();
 
@@ -141,7 +145,7 @@ class Add extends Component
                     $result['server'] = $server->environment_variables()
                         ->pluck('key')
                         ->toArray();
-                } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+                } catch (AuthorizationException $e) {
                     // User not authorized to view server variables
                 }
             }
@@ -149,7 +153,7 @@ class Add extends Component
             // For application environment variables, try to use the application's destination server
             $applicationUuid = data_get($this->parameters, 'application_uuid');
             if ($applicationUuid) {
-                $application = \App\Models\Application::whereRelation('environment.project.team', 'id', $team->id)
+                $application = Application::whereRelation('environment.project.team', 'id', $team->id)
                     ->where('uuid', $applicationUuid)
                     ->with('destination.server')
                     ->first();
@@ -160,7 +164,7 @@ class Add extends Component
                         $result['server'] = $application->destination->server->environment_variables()
                             ->pluck('key')
                             ->toArray();
-                    } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+                    } catch (AuthorizationException $e) {
                         // User not authorized to view server variables
                     }
                 }
@@ -168,7 +172,7 @@ class Add extends Component
                 // For service environment variables, try to use the service's server
                 $serviceUuid = data_get($this->parameters, 'service_uuid');
                 if ($serviceUuid) {
-                    $service = \App\Models\Service::whereRelation('environment.project.team', 'id', $team->id)
+                    $service = Service::whereRelation('environment.project.team', 'id', $team->id)
                         ->where('uuid', $serviceUuid)
                         ->with('server')
                         ->first();
@@ -179,7 +183,7 @@ class Add extends Component
                             $result['server'] = $service->server->environment_variables()
                                 ->pluck('key')
                                 ->toArray();
-                        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+                        } catch (AuthorizationException $e) {
                             // User not authorized to view server variables
                         }
                     }

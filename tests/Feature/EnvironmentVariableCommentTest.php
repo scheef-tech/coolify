@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Project\Shared\EnvironmentVariable\All;
+use App\Livewire\Project\Shared\EnvironmentVariable\Show;
 use App\Models\Application;
 use App\Models\EnvironmentVariable;
 use App\Models\Team;
@@ -143,7 +145,7 @@ test('environment variable comment cannot exceed 256 characters via Livewire', f
 
     $longComment = str_repeat('a', 257);
 
-    Livewire::test(\App\Livewire\Project\Shared\EnvironmentVariable\Show::class, ['env' => $env, 'type' => 'application'])
+    Livewire::test(Show::class, ['env' => $env, 'type' => 'application'])
         ->set('comment', $longComment)
         ->call('submit')
         ->assertHasErrors(['comment' => 'max']);
@@ -162,7 +164,7 @@ test('bulk update preserves existing comments when no inline comment provided', 
     // User switches to Developer view and pastes new value without inline comment
     $bulkContent = "DATABASE_URL=postgres://new-host\nOTHER_VAR=value";
 
-    Livewire::test(\App\Livewire\Project\Shared\EnvironmentVariable\All::class, [
+    Livewire::test(All::class, [
         'resource' => $this->application,
         'type' => 'application',
     ])
@@ -192,7 +194,7 @@ test('bulk update overwrites existing comments when inline comment provided', fu
     // User pastes new value WITH inline comment
     $bulkContent = 'API_KEY=new-key #Updated production key';
 
-    Livewire::test(\App\Livewire\Project\Shared\EnvironmentVariable\All::class, [
+    Livewire::test(All::class, [
         'resource' => $this->application,
         'type' => 'application',
     ])
@@ -230,7 +232,7 @@ test('bulk update handles mixed inline and stored comments correctly', function 
     // Bulk paste: one with inline comment, one without
     $bulkContent = "VAR_WITH_COMMENT=new_value1 #New inline comment\nVAR_WITHOUT_COMMENT=new_value2";
 
-    Livewire::test(\App\Livewire\Project\Shared\EnvironmentVariable\All::class, [
+    Livewire::test(All::class, [
         'resource' => $this->application,
         'type' => 'application',
     ])
@@ -254,7 +256,7 @@ test('bulk update creates new variables with inline comments', function () {
     // Bulk paste creates new variables, some with inline comments
     $bulkContent = "NEW_VAR1=value1 #Comment for var1\nNEW_VAR2=value2\nNEW_VAR3=value3 #Comment for var3";
 
-    Livewire::test(\App\Livewire\Project\Shared\EnvironmentVariable\All::class, [
+    Livewire::test(All::class, [
         'resource' => $this->application,
         'type' => 'application',
     ])

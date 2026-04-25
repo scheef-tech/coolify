@@ -5,7 +5,7 @@
     <div class="flex items-start gap-2">
         <h1>Shared Variables</h1>
     </div>
-     <div class="subtitle">Set Team / Project / Environment / Server wide variables.</div>
+     <div class="subtitle">Set Team / Project / Environment / Server wide variables. Drill into an environment to manage env-scoped secrets.</div>
 
      <div class="flex flex-col gap-2 -mt-1">
          <a class="coolbox group" href="{{ route('shared-variables.team.index') }}" {{ wireNavigate() }}>
@@ -23,7 +23,7 @@
          <a class="coolbox group" href="{{ route('shared-variables.environment.index') }}" {{ wireNavigate() }}>
              <div class="flex flex-col justify-center mx-6">
                  <div class="box-title">Environment wide</div>
-                 <div class="box-description">Usable for all resources in an environment.</div>
+                 <div class="box-description">Usable for all resources in an environment. Includes secrets management.</div>
              </div>
          </a>
          <a class="coolbox group" href="{{ route('shared-variables.server.index') }}" {{ wireNavigate() }}>
