@@ -2,18 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
-
 ## [4.0.0-fork.10] - 2026-04-25
 
-### ✨ Features
+### 🚀 Features
 
-- *(ui)* Style Variables/Secrets tab strip as proper tabs (was easy to miss as plain text)
-- *(installer)* Self-heal pinned autoupdate URLs in upgrade.sh — pre-fork.7 fork installs that pinned `VERSIONS_URL`/`COOLIFY_ASSET_BASE_URL` to a specific tag's release assets are auto-rewritten to `releases/latest/download/...` on next upgrade. Operators no longer need to hand-edit `.env` to unstuck their autoupdate flow.
+- *(ui)* Style Variables/Secrets tab strip as proper tabs
+- *(installer)* Self-heal pinned autoupdate URLs in upgrade.sh
 
 ### 📚 Documentation
 
-- *(claude-md)* Document Pest test setup gotchas (InstanceSettings::find(0) seeding, redis maintenance bypass, sanctum team_id flow, etc.)
+- Update changelog
+- *(claude-md)* Document Pest test setup gotchas
+
+### ⚙️ Miscellaneous Tasks
+
+- Rollup marker — fork-10-polish-and-selfheal branch
+- *(release)* Bump fork app version to 4.0.0-fork.10
 
 ## [4.0.0-fork.9] - 2026-04-25
 
