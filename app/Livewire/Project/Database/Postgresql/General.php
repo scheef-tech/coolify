@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class General extends Component
@@ -108,7 +109,7 @@ class General extends Component
             'customDockerRunOptions' => 'nullable',
             'enableSsl' => 'boolean',
             'sslMode' => 'nullable|string|in:allow,prefer,require,verify-ca,verify-full',
-            'sslAlgorithm' => 'nullable|string|in:prime256v1,rsa-2048,secp521r1',
+            'sslAlgorithm' => ['nullable', 'string', Rule::in(StandalonePostgresql::SSL_CERTIFICATE_ALGORITHMS)],
         ];
     }
 
@@ -131,7 +132,7 @@ class General extends Component
                 'publicPortTimeout.integer' => 'The Public Port Timeout must be an integer.',
                 'publicPortTimeout.min' => 'The Public Port Timeout must be at least 1.',
                 'sslMode.in' => 'The SSL Mode must be one of: allow, prefer, require, verify-ca, verify-full.',
-                'sslAlgorithm.in' => 'The SSL Certificate Algorithm must be one of: prime256v1, rsa-2048, secp521r1.',
+                'sslAlgorithm.in' => 'The SSL Certificate Algorithm must be one of: '.implode(', ', StandalonePostgresql::SSL_CERTIFICATE_ALGORITHMS).'.',
             ]
         );
     }

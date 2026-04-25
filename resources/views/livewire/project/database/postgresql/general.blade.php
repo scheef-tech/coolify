@@ -118,7 +118,8 @@
                 @if ($enableSsl)
                     <div class="mx-2">
                         @php
-                            $isHyperdriveUnsupportedAlgorithm = $sslAlgorithm === 'secp521r1';
+                            $sslAlgorithmLabels = \App\Models\StandalonePostgresql::SSL_CERTIFICATE_ALGORITHM_LABELS;
+                            $isHyperdriveUnsupportedAlgorithm = ! $database->isSslAlgorithmHyperdriveCompatible($sslAlgorithm);
                         @endphp
                         @if ($database->isExited())
                             <div class="max-w-2xl space-y-3">
@@ -137,13 +138,13 @@
                                     wire:model.live="sslAlgorithm" instantSave="instantSaveSSL"
                                     helper="Used for generated PostgreSQL certificates. Regenerate SSL certificates after changing this value."
                                     canGate="update" :canResource="$database">
-                                    <option value="prime256v1">ECDSA prime256v1</option>
-                                    <option value="rsa-2048">RSA 2048</option>
-                                    <option value="secp521r1">ECDSA secp521r1</option>
+                                    @foreach ($sslAlgorithmLabels as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
                                 </x-forms.select>
                                 @if ($isHyperdriveUnsupportedAlgorithm)
                                     <div class="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs leading-5 text-warning">
-                                        This algorithm is not supported by Hyperdrive.
+                                        This algorithm is not supported by Cloudflare Hyperdrive. Switch to ECDSA prime256v1 or RSA 2048 if you plan to front this database with Hyperdrive.
                                     </div>
                                 @endif
                                 @if ($showSslAlgorithmRegenerationNotice)
@@ -168,13 +169,13 @@
                                 <x-forms.select id="sslAlgorithm" label="SSL Certificate Algorithm"
                                     instantSave="instantSaveSSL" disabled
                                     helper="Database should be stopped to change this settings.">
-                                    <option value="prime256v1">ECDSA prime256v1</option>
-                                    <option value="rsa-2048">RSA 2048</option>
-                                    <option value="secp521r1">ECDSA secp521r1</option>
+                                    @foreach ($sslAlgorithmLabels as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
                                 </x-forms.select>
                                 @if ($isHyperdriveUnsupportedAlgorithm)
                                     <div class="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs leading-5 text-warning">
-                                        This algorithm is not supported by Hyperdrive.
+                                        This algorithm is not supported by Cloudflare Hyperdrive. Switch to ECDSA prime256v1 or RSA 2048 if you plan to front this database with Hyperdrive.
                                     </div>
                                 @endif
                                 @if ($showSslAlgorithmRegenerationNotice)

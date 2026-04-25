@@ -27,6 +27,21 @@ class StandalonePostgresql extends BaseModel
         self::SSL_CERTIFICATE_ALGORITHM_SECP521R1,
     ];
 
+    public const SSL_CERTIFICATE_ALGORITHM_LABELS = [
+        self::SSL_CERTIFICATE_ALGORITHM_PRIME256V1 => 'ECDSA prime256v1',
+        self::SSL_CERTIFICATE_ALGORITHM_RSA_2048 => 'RSA 2048',
+        self::SSL_CERTIFICATE_ALGORITHM_SECP521R1 => 'ECDSA secp521r1',
+    ];
+
+    /**
+     * Algorithms not supported by Cloudflare Hyperdrive's TLS path.
+     * Selecting one of these surfaces a warning in the UI so users running behind
+     * Hyperdrive switch to a compatible algorithm before regenerating certs.
+     */
+    public const SSL_CERTIFICATE_ALGORITHMS_HYPERDRIVE_INCOMPATIBLE = [
+        self::SSL_CERTIFICATE_ALGORITHM_SECP521R1,
+    ];
+
     protected $fillable = [
         'uuid',
         'name',
@@ -314,6 +329,13 @@ class StandalonePostgresql extends BaseModel
         }
 
         return self::SSL_CERTIFICATE_ALGORITHM_DEFAULT;
+    }
+
+    public function isSslAlgorithmHyperdriveCompatible(?string $algorithm = null): bool
+    {
+        $algorithm ??= $this->resolvedSslAlgorithm();
+
+        return ! in_array($algorithm, self::SSL_CERTIFICATE_ALGORITHMS_HYPERDRIVE_INCOMPATIBLE, true);
     }
 
     protected function internalDbUrl(): Attribute
