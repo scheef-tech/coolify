@@ -329,10 +329,63 @@ function get_route_parameters(): array
     return Route::current()->parameters();
 }
 
+/**
+ * Validates that a configured Coolify update URL points to an allowlisted host before it is
+ * fetched or executed. The autoupdate flow eventually pipes the contents of the upgrade script
+ * into bash as root, so a misconfigured or attacker-tampered .env (`COOLIFY_ASSET_BASE_URL`,
+ * `UPGRADE_SCRIPT_URL`, `VERSIONS_URL`) would otherwise be a privileged-execution vector.
+ *
+ * Allowed hosts:
+ * - cdn.coollabs.io   (upstream)
+ * - github.com        (forks — path must look like /<owner>/<repo>/releases/...)
+ *
+ * Throws on anything else, on http://, on credentials in the URL, or on malformed input.
+ */
+function assertSafeCoolifyUpdateUrl(string $url): string
+{
+    $parsed = parse_url($url);
+    if ($parsed === false || ! is_array($parsed)) {
+        throw new RuntimeException('Coolify update URL is malformed.');
+    }
+    if (($parsed['scheme'] ?? '') !== 'https') {
+        throw new RuntimeException('Coolify update URL must use HTTPS.');
+    }
+    if (isset($parsed['user']) || isset($parsed['pass'])) {
+        throw new RuntimeException('Coolify update URL must not contain credentials.');
+    }
+    $host = strtolower($parsed['host'] ?? '');
+    if ($host === '') {
+        throw new RuntimeException('Coolify update URL has no host.');
+    }
+
+    $allowedHosts = [
+        'cdn.coollabs.io' => null,
+        'github.com' => '#^/[^/]+/[^/]+/releases/#',
+    ];
+
+    if (! array_key_exists($host, $allowedHosts)) {
+        throw new RuntimeException(
+            "Coolify update URL host '{$host}' is not allowed. Allowed hosts: "
+            .implode(', ', array_keys($allowedHosts))
+            .". For forks, host release assets on github.com under your repository's releases."
+        );
+    }
+
+    $pathPattern = $allowedHosts[$host];
+    if ($pathPattern !== null && ! preg_match($pathPattern, $parsed['path'] ?? '')) {
+        throw new RuntimeException(
+            "Coolify update URL on host '{$host}' must point at a GitHub Release asset path "
+            .'(/<owner>/<repo>/releases/...).'
+        );
+    }
+
+    return $url;
+}
+
 function get_latest_sentinel_version(): string
 {
     try {
-        $response = Http::get(config('constants.coolify.versions_url'));
+        $response = Http::get(assertSafeCoolifyUpdateUrl(config('constants.coolify.versions_url')));
         $versions = $response->json();
 
         return data_get($versions, 'coolify.sentinel.version');

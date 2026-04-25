@@ -34,7 +34,7 @@ class UpdateCoolify
         // Fetch fresh version from CDN instead of using cache
         try {
             $response = Http::retry(3, 1000)->timeout(10)
-                ->get(config('constants.coolify.versions_url'));
+                ->get(assertSafeCoolifyUpdateUrl(config('constants.coolify.versions_url')));
 
             if ($response->successful()) {
                 $versions = $response->json();
@@ -117,7 +117,7 @@ class UpdateCoolify
     private function update()
     {
         $latestHelperImageVersion = getHelperVersion();
-        $upgradeScriptUrl = config('constants.coolify.upgrade_script_url');
+        $upgradeScriptUrl = assertSafeCoolifyUpdateUrl(config('constants.coolify.upgrade_script_url'));
 
         remote_process([
             "curl -fsSL {$upgradeScriptUrl} -o /data/coolify/source/upgrade.sh",
