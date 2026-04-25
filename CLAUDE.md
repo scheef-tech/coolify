@@ -21,10 +21,13 @@ The app runs at `localhost:8000` by default. Vite dev server on port 5173.
 ## Common Commands
 
 ```bash
-# Tests (Pest 4)
-php artisan test --compact                          # all tests
-php artisan test --compact --filter=testName         # single test
-php artisan test --compact tests/Feature/SomeTest.php  # specific file
+# Tests (Pest 4) — run inside the coolify container when using spin's local stack
+docker exec coolify php artisan test --compact                       # all tests
+docker exec coolify php artisan test --compact --filter=testName      # single test
+docker exec coolify php artisan test --compact tests/Feature/SomeTest.php  # specific file
+
+# Migrations (testing DB needs initial migrate before RefreshDatabase trait works)
+docker exec coolify php artisan migrate --env=testing --force
 
 # Code formatting (Pint, Laravel preset)
 vendor/bin/pint --dirty --format agent              # format changed files
@@ -33,6 +36,39 @@ vendor/bin/pint --dirty --format agent              # format changed files
 npm run dev                     # vite dev server
 npm run build                   # production build
 ```
+
+### Pest test setup gotchas
+
+This repo's tests have a few non-obvious dependencies. When writing a new feature test:
+
+1. **`uses(RefreshDatabase::class)`** — required for any test that touches the DB. Tests share a transaction-rollback lifecycle.
+2. **`InstanceSettings::find(0)` is called from middleware** (the `instanceSettings()` helper in `bootstrap/helpers/shared.php` does `findOrFail(0)`). Tests must seed an InstanceSettings row with `id = 0` in `beforeEach`. The auto-incrementing PK ignores `updateOrCreate(['id' => 0])` — use `unguarded`:
+
+   ```php
+   InstanceSettings::unguarded(function () {
+       InstanceSettings::query()->create(['id' => 0]);
+   });
+   ```
+
+3. **Bypass maintenance middleware** — coolify's `config/app.php` hardcodes `app.maintenance.driver = cache` with `store = redis`. Tests fail with "Connection refused" because redis isn't reachable in the test context. Workaround in `beforeEach`:
+
+   ```php
+   Config::set('cache.default', 'array');
+   Config::set('app.maintenance.driver', 'file');
+   Config::set('app.maintenance.store', null);
+   Cache::clearResolvedInstances();
+   $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class);
+   ```
+
+4. **API token team_id** — `User::createToken()` is overridden to set `team_id` from `session('currentTeam')->id`. Tests must do `session(['currentTeam' => $this->team])` BEFORE `createToken`. Don't manually `forceFill(['team_id' => ...])` afterwards — it overrides with a string and breaks `Project::whereTeamId()` lookups.
+
+5. **Boolean DB columns** — `is_shown_once`, `is_dev_pullable`, etc. are stored as boolean but Eloquent returns them as `1`/`0` int unless an explicit cast is on the model. Use `expect((bool) $secret->is_shown_once)->toBeTrue()` in assertions OR add `protected function casts(): array` to the model.
+
+6. **Don't catch ValidationException in Livewire actions** — Livewire's testing `assertHasErrors()` reads errors from the component's `$errors` bag, which is only populated when validation throws and isn't caught. A blanket `catch (\Throwable $e)` swallows the validation failure and tests will report "Component has no errors".
+
+### Testing DB schema
+
+Initial test runs error with "Migration table not found" because the testing DB connection is `:memory:` SQLite when `DB_CONNECTION=testing` resolves to in-memory. After bringing up the spin stack, run `php artisan migrate --env=testing --force` once to apply migrations to the testing connection. RefreshDatabase wraps each test in a transaction afterwards; you only need the migrate step once per fresh stack.
 
 ## Architecture
 
