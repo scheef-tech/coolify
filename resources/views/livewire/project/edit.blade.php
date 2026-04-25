@@ -16,4 +16,17 @@
                 <x-forms.input label="Description" id="description" />
             </div>
         </form>
+
+        <div class="flex flex-col gap-2 mt-6">
+            <h3>Shared variables</h3>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                Manage variables that apply across this project's resources.
+            </p>
+            <a class="coolbox group" href="{{ route('shared-variables.project.show', ['project_uuid' => $project->uuid]) }}" {{ wireNavigate() }}>
+                <div class="flex flex-col justify-center mx-6">
+                    <div class="box-title">Project shared variables</div>
+                    <div class="box-description">Available to every resource across all environments in this project.</div>
+                </div>
+            </a>
+        </div>
 </div>

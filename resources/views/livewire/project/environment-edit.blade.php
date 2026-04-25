@@ -45,4 +45,23 @@
             <x-forms.input label="Description" id="description" />
         </div>
     </form>
+
+    <div class="flex flex-col gap-2 mt-6">
+        <h3>Shared variables</h3>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400">
+            Manage variables and secrets that apply across this environment's resources.
+        </p>
+        <a class="coolbox group" href="{{ route('shared-variables.environment.show', ['project_uuid' => $project->uuid, 'environment_uuid' => $environment->uuid]) }}" {{ wireNavigate() }}>
+            <div class="flex flex-col justify-center mx-6">
+                <div class="box-title">Environment shared variables</div>
+                <div class="box-description">Available to every resource in this environment.</div>
+            </div>
+        </a>
+        <a class="coolbox group" href="{{ route('shared-variables.environment.secrets', ['project_uuid' => $project->uuid, 'environment_uuid' => $environment->uuid]) }}" {{ wireNavigate() }}>
+            <div class="flex flex-col justify-center mx-6">
+                <div class="box-title">Environment secrets</div>
+                <div class="box-description">Sensitive values, scoped to this environment. Optional dev-pullable for coolster CLI.</div>
+            </div>
+        </a>
+    </div>
 </div>

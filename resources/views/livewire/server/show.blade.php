@@ -417,6 +417,19 @@
                     @endif
                 </div>
             @endif
+
+            <div class="flex flex-col gap-2 mt-6">
+                <h3>Shared variables</h3>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                    Manage variables that apply to every resource running on this server.
+                </p>
+                <a class="coolbox group" href="{{ route('shared-variables.server.show', ['server_uuid' => $server->uuid]) }}" {{ wireNavigate() }}>
+                    <div class="flex flex-col justify-center mx-6">
+                        <div class="box-title">Server shared variables</div>
+                        <div class="box-description">Available to every resource that runs on this server.</div>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 </div>
