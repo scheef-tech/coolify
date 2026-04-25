@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+## [4.0.0-fork.11] - 2026-04-25
+
+### ✨ Features
+
+- *(shared-variables)* SharedVariablesAccordion component — collapsible inheritance scopes (Environment, Project, Server, Team) embedded inline on application/service/database environment-variable pages, with edit-in-place via the existing show component. The Environment scope has Variables/Secrets tabs.
+- *(shared-variables)* Compact mode for dedicated section components — same components serve both their dedicated full-screen pages and the embedded accordion sections, no logic duplication.
+- *(shared-variables)* Shortcut "Shared variables" coolbox cards on project edit, environment edit, and server show pages, providing direct entry to the dedicated scope-specific pages without going through the sidebar.
+
+### ✅ Tests
+
+- *(shared-variables)* 8 Livewire tests covering accordion scope derivation per context type, expand/collapse toggle, and env sub-tab switching.
+
 ## [4.0.0-fork.10] - 2026-04-25
 
 ### 🚀 Features
