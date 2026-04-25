@@ -11,15 +11,16 @@
         @endcan
         <x-forms.button canGate="update" :canResource="$environment" wire:click='switch'>{{ $view === 'normal' ? 'Developer view' : 'Normal view' }}</x-forms.button>
     </div>
-    <div class="flex items-center gap-2 mt-1 text-sm">
-        <span class="font-semibold">Variables</span>
-        <span class="text-neutral-400">|</span>
-        <a class="hover:underline"
+    <nav class="flex gap-1 mt-3 mb-1 border-b dark:border-coolgray-200 border-neutral-200" aria-label="Shared variables sections">
+        <span class="px-3 py-2 -mb-px text-sm font-semibold border-b-2 dark:border-warning border-coollabs dark:text-warning text-coollabs">
+            Variables
+        </span>
+        <a class="px-3 py-2 -mb-px text-sm font-medium border-b-2 border-transparent text-neutral-500 dark:hover:text-warning hover:text-coollabs dark:hover:border-warning hover:border-coollabs transition-colors"
             href="{{ route('shared-variables.environment.secrets', ['project_uuid' => $project->uuid, 'environment_uuid' => $environment->uuid]) }}"
             {{ wireNavigate() }}>
             Secrets
         </a>
-    </div>
+    </nav>
     <div class="flex items-center gap-1 subtitle">You can use these variables anywhere with <span
             class="dark:text-warning text-coollabs">@{{ environment.VARIABLENAME }}</span><x-helper
             helper="More info <a class='underline dark:text-white' href='https://coolify.io/docs/knowledge-base/environment-variables#shared-variables' target='_blank'>here</a>."></x-helper>

@@ -14,15 +14,16 @@
         </x-forms.button>
     </div>
 
-    <div class="flex items-center gap-2 mt-1 text-sm">
-        <a class="hover:underline"
+    <nav class="flex gap-1 mt-3 mb-1 border-b dark:border-coolgray-200 border-neutral-200" aria-label="Shared variables sections">
+        <a class="px-3 py-2 -mb-px text-sm font-medium border-b-2 border-transparent text-neutral-500 dark:hover:text-warning hover:text-coollabs dark:hover:border-warning hover:border-coollabs transition-colors"
             href="{{ route('shared-variables.environment.show', ['project_uuid' => $project->uuid, 'environment_uuid' => $environment->uuid]) }}"
             {{ wireNavigate() }}>
             Variables
         </a>
-        <span class="text-neutral-400">|</span>
-        <span class="font-semibold">Secrets</span>
-    </div>
+        <span class="px-3 py-2 -mb-px text-sm font-semibold border-b-2 dark:border-warning border-coollabs dark:text-warning text-coollabs">
+            Secrets
+        </span>
+    </nav>
 
     <div class="flex items-center gap-1 mt-1 subtitle">
         Sensitive environment values, scoped to this project + environment. Values are write-only — they are never
