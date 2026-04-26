@@ -131,6 +131,22 @@ Initial test runs error with "Migration table not found" because the testing DB 
 - Every change must have tests — write or update tests, then run them. For bug fixes, follow TDD: write a failing test first, then fix the bug (see Test Enforcement below)
 - Check sibling files for conventions before creating new files
 
+### Compact mode for embeddable section components
+
+When a Livewire component is meant to serve BOTH a dedicated route AND be embeddable inside a parent (accordion, modal, sidebar panel), follow the compact-mode pattern used by the `SharedVariables\{Environment,Project,Server,Team}` components:
+
+1. **Public property** `public bool $compact = false;` — parent flips it via `:compact="true"` prop binding.
+2. **`mount()` guards model resolution**:
+   ```php
+   if (! isset($this->project)) {
+       $this->project = Project::ownedByCurrentTeam()->where('uuid', $project_uuid)->firstOrFail();
+   }
+   ```
+   So the same component works whether the parent passes the model directly or the route does the lookup.
+3. **View wraps chrome with `@unless ($compact)`** — page title, h1, descriptive subtitle, inter-page tab strips. In the `@else` branch, render a compact control row with the +Add modal, view toggle, and an "Open full page" deep-link.
+
+This keeps logic in one place — same component serves the dedicated full-screen route and the embedded child use case. See `App\Livewire\Shared\SharedVariablesAccordion` for the consumer pattern (passes context model, embeds compact children with `wire:key` scoped to the model id).
+
 ## Git Workflow
 
 - Main branch: `v4.x`
