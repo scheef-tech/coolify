@@ -479,9 +479,9 @@ class DatabasesController extends Controller
                 $validator = customApiValidator($request->all(), [
                     'mariadb_conf' => 'string',
                     'mariadb_root_password' => 'string',
-                    'mariadb_user' => 'string',
+                    'mariadb_user' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                     'mariadb_password' => 'string',
-                    'mariadb_database' => 'string',
+                    'mariadb_database' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                 ]);
                 if ($request->has('mariadb_conf')) {
                     if (! isBase64Encoded($request->mariadb_conf)) {
@@ -508,9 +508,9 @@ class DatabasesController extends Controller
                 $allowedFields = ['name', 'description', 'image', 'public_port', 'public_port_timeout', 'is_public', 'instant_deploy', 'limits_memory', 'limits_memory_swap', 'limits_memory_swappiness', 'limits_memory_reservation', 'limits_cpus', 'limits_cpuset', 'limits_cpu_shares', 'mongo_conf', 'mongo_initdb_root_username', 'mongo_initdb_root_password', 'mongo_initdb_database'];
                 $validator = customApiValidator($request->all(), [
                     'mongo_conf' => 'string',
-                    'mongo_initdb_root_username' => 'string',
+                    'mongo_initdb_root_username' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                     'mongo_initdb_root_password' => 'string',
-                    'mongo_initdb_database' => 'string',
+                    'mongo_initdb_database' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                 ]);
                 if ($request->has('mongo_conf')) {
                     if (! isBase64Encoded($request->mongo_conf)) {
@@ -539,8 +539,8 @@ class DatabasesController extends Controller
                 $validator = customApiValidator($request->all(), [
                     'mysql_root_password' => 'string',
                     'mysql_password' => 'string',
-                    'mysql_user' => 'string',
-                    'mysql_database' => 'string',
+                    'mysql_user' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
+                    'mysql_database' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                     'mysql_conf' => 'string',
                 ]);
                 if ($request->has('mysql_conf')) {
@@ -1783,8 +1783,11 @@ class DatabasesController extends Controller
         } elseif ($type === NewDatabaseTypes::MARIADB) {
             $allowedFields = ['name', 'description', 'image', 'public_port', 'public_port_timeout', 'is_public', 'project_uuid', 'environment_name', 'environment_uuid', 'server_uuid', 'destination_uuid', 'instant_deploy', 'limits_memory', 'limits_memory_swap', 'limits_memory_swappiness', 'limits_memory_reservation', 'limits_cpus', 'limits_cpuset', 'limits_cpu_shares', 'mariadb_conf', 'mariadb_root_password', 'mariadb_user', 'mariadb_password', 'mariadb_database'];
             $validator = customApiValidator($request->all(), [
-                'clickhouse_admin_user' => 'string',
-                'clickhouse_admin_password' => 'string',
+                'mariadb_conf' => 'string',
+                'mariadb_root_password' => 'string',
+                'mariadb_user' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
+                'mariadb_password' => 'string',
+                'mariadb_database' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
             ]);
             $extraFields = array_diff(array_keys($request->all()), $allowedFields);
             if ($validator->fails() || ! empty($extraFields)) {
@@ -1841,8 +1844,8 @@ class DatabasesController extends Controller
             $validator = customApiValidator($request->all(), [
                 'mysql_root_password' => 'string',
                 'mysql_password' => 'string',
-                'mysql_user' => 'string',
-                'mysql_database' => 'string',
+                'mysql_user' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
+                'mysql_database' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                 'mysql_conf' => 'string',
             ]);
             $extraFields = array_diff(array_keys($request->all()), $allowedFields);
@@ -2077,9 +2080,9 @@ class DatabasesController extends Controller
             $allowedFields = ['name', 'description', 'image', 'public_port', 'public_port_timeout', 'is_public', 'project_uuid', 'environment_name', 'environment_uuid', 'server_uuid', 'destination_uuid', 'instant_deploy', 'limits_memory', 'limits_memory_swap', 'limits_memory_swappiness', 'limits_memory_reservation', 'limits_cpus', 'limits_cpuset', 'limits_cpu_shares', 'mongo_conf', 'mongo_initdb_root_username', 'mongo_initdb_root_password', 'mongo_initdb_database'];
             $validator = customApiValidator($request->all(), [
                 'mongo_conf' => 'string',
-                'mongo_initdb_root_username' => 'string',
+                'mongo_initdb_root_username' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
                 'mongo_initdb_root_password' => 'string',
-                'mongo_initdb_database' => 'string',
+                'mongo_initdb_database' => 'string|regex:/^[a-zA-Z_][a-zA-Z0-9_]*$/',
             ]);
             $extraFields = array_diff(array_keys($request->all()), $allowedFields);
             if ($validator->fails() || ! empty($extraFields)) {
