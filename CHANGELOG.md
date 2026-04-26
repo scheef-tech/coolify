@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### 📚 Documentation
+
+- Update changelog
+- *(claude-md)* Document compact-mode pattern for embeddable Livewire sections
+
 ## [4.0.0-fork.11] - 2026-04-25
 
 ### 🚀 Features
