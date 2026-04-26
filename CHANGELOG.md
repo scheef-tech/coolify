@@ -4,10 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### 🐛 Bug Fixes
+
+- *(security)* Validate mysql/mariadb/mongo user/db format
+
 ### 📚 Documentation
 
 - Update changelog
 - *(claude-md)* Document compact-mode pattern for embeddable Livewire sections
+- Update changelog
 
 ## [4.0.0-fork.11] - 2026-04-25
 
